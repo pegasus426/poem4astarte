@@ -1,8 +1,8 @@
+import re
 import spacy
 from spacy_syllables import SpacySyllables
-from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Carica il modello italiano
+# Carica il modello italiano e il modulo per il conteggio delle sillabe
 nlp = spacy.load("it_core_news_sm")
 syllables = SpacySyllables(nlp)
 nlp.add_pipe("syllables", after="tagger")
@@ -20,166 +20,102 @@ Dinanzi a me non fuor cose create
 se non etterne, e io etterno duro.
 Lasciate ogne speranza, voi ch'intrate."""
 
-def unisci_apostrofi(doc):
-    """Unisce token che iniziano con un apostrofo al token precedente."""
-    nuovi_token = []
-    skip = False
-    for i, token in enumerate(doc):
-        if skip:
-            skip = False
-            continue
-        # Se il token successivo inizia con apostrofo, unisci
-        if i < len(doc) - 1 and token.text in ["l'", "d'", "s'"]:
-            next_token = doc[i+1]
-            unito = token.text + next_token.text
-            nuovi_token.append(unito)
-            skip = True
-        else:
-            nuovi_token.append(token.text)
-    return nuovi_token
+# Dizionario di eccezioni metriche
+ECCEZIONI = {
+    "mio": 2,         # "mio" scandito in due sillabe nella metrica poetica
+    "tuo": 2,
+    "suo": 2,
+    "l'amor": 2,      # forma poetica di "l'amore"
+    "d'amor": 2,
+    "ch'in": 2,
+    "un'amor": 2,
+    "io": 2,          # forzato a 2 sillabe
+    # Eccezioni per forme contratte unite:
+    "l'primo": 3,     # "l'primo" da scandire come 3 sillabe (es. "l'-pri-mo")
+    "ch'intrate": 3,  # "ch'intrate" scandito in 3 sillabe
+}
 
+def preprocess_text(text):
+    """
+    Pre-elabora il testo per unire le forme contratte.
+    - Rimuove spazi superflui prima degli apostrofi (es. trasforma " 'l" in "l'")
+    - Unisce tramite regex sequenze come "l' amore" in "l'amore" o "ch' intrate" in "ch'intrate".
+    """
+    # Rimuove spazi prima degli apostrofi: " 'l" → "l'"
+    text = re.sub(r"\s+['’]", "'", text)
+    # Unisce le forme contratte: ad esempio "l' amore" diventa "l'amore"
+    text = re.sub(r"\b(l|d|s|ch)['’]\s+", r"\1'", text)
+    return text
 
-
+def conta_sillabe_token(token):
+    """
+    Restituisce il numero di sillabe per il token.
+    Se il token è vuoto o è solo punteggiatura, restituisce 0.
+    Se il token (pulito) è presente in ECCEZIONI, restituisce il valore definito.
+    Altrimenti usa il conteggio della libreria.
+    """
+    token_text = token.text.strip(" '’\".,;:!?").lower()
+    if not token_text:
+        return 0
+    if token_text in ECCEZIONI:
+        return ECCEZIONI[token_text]
+    return token._.syllables_count if token._.syllables_count else 0
 
 def conta_sinalefe_token(doc):
     """
-    Conta le sinalefe iterando sui token:
-    Se il token corrente termina per vocale ed il successivo inizia per vocale,
-    si conta una sinalefa.
-    Vengono ignorati i token che non hanno un conteggio di sillabe (punteggiatura, ecc.)
+    Conta le sinalefe nel documento (lista di token).
+    Si considera sinalefa se la fine di un token e l'inizio del successivo sono vocali.
+    Ignora token che sono punteggiatura e gestisce il caso in cui il token successivo
+    inizi con "h" muta.
     """
     vowels = "aeiouàèéìòóù"
     count = 0
     for i in range(len(doc) - 1):
-        token_curr = doc[i]
-        token_next = doc[i+1]
-        # Salta se uno dei due token non ha un conteggio
-        if not token_curr._.syllables_count or not token_next._.syllables_count:
+        t_curr = doc[i].text.strip(" '’\".,;:!?").lower()
+        t_next = doc[i+1].text.strip(" '’\".,;:!?").lower()
+        if not t_curr or not t_next:
             continue
-        # Rimuove eventuali apostrofi o punteggiatura dai bordi
-        text_curr = token_curr.text.strip(" '’\".,;:!?").lower()
-        text_next = token_next.text.strip(" '’\".,;:!?").lower()
-        if text_curr and text_next:
-            if text_curr[-1] in vowels and text_next[0] in vowels:
-                count += 1
+        if doc[i+1].text in [",", ";", ".", ":", "!", "?"]:
+            continue
+        if t_next.startswith("h") and len(t_next) > 1 and t_next[1] in vowels:
+            t_next = t_next[1:]
+        if t_curr[-1] in vowels and t_next[0] in vowels:
+            count += 1
     return count
 
-def conta_sillabe_corrette(verso):
-    doc = verso
-    # Somma delle sillabe per ogni token (saltando token che non hanno un conteggio)
-    totale_sillabe = sum(token._.syllables_count for token in doc if token._.syllables_count)
-    # Conta le sinalefe basandosi sui token
+def conta_sillabe_corrette(doc):
+    """
+    Calcola il totale delle sillabe in un verso:
+      - Somma le sillabe di ogni token (con eccezioni)
+      - Sottrae le sinalefe
+      - Se l'ultimo token utile termina con vocale accentata (verso tronco), aggiunge 1 sillaba.
+    """
+    totale_sillabe = sum(conta_sillabe_token(token) for token in doc)
     num_sinalefe = conta_sinalefe_token(doc)
     totale_corretto = totale_sillabe - num_sinalefe
 
-    # Gestione dei versi tronchi: se l'ultimo token (con sillabe) finisce con vocale accentata,
-    # è probabile che il verso sia tronco, quindi si aggiunge 1 sillaba
-    tokens_con_sillabe = [token for token in doc if token._.syllables_count]
-    if tokens_con_sillabe:
-        ultimo = tokens_con_sillabe[-1].text.strip(" '’\".,;:!?")
+    tokens_utili = [token for token in doc if conta_sillabe_token(token) > 0]
+    if tokens_utili:
+        ultimo = tokens_utili[-1].text.strip(" '’\".,;:!?")
         if ultimo and ultimo[-1] in "àéíóú":
             totale_corretto += 1
-
     return totale_corretto, num_sinalefe, doc
 
-# Analisi dei versi
+# Elaborazione verso per verso
 for verso in poem.split("\n"):
-    # Salta eventuali righe vuote
     if not verso.strip():
         continue
-    verso_token_list = unisci_apostrofi(nlp(verso))  # lista di stringhe
-    verso_unito = " ".join(verso_token_list)          # ricompone il testo
-    doc = nlp(verso_unito)                            # tokenizza di nuovo
+    # Pre-elabora il verso per unire le forme contratte
+    verso_pre = preprocess_text(verso)
+    doc = nlp(verso_pre)
     totale_corretto, num_sinalefe, doc = conta_sillabe_corrette(doc)
     print("\nAnalisi per parola:")
     for token in doc:
-        # Mostra solo i token con conteggio, per chiarezza
-        if token._.syllables_count:
-            print(f"{token.text:<15} {token._.syllables} ({token._.syllables_count} sillabe)")
+        count = conta_sillabe_token(token)
+        if count:
+            print(f"{token.text:<15} {token._.syllables} ({count} sillabe)")
         else:
             print(f"{token.text:<15} -")
     print(f"\nTotale sillabe nel verso (corretto per sinalefe e tronche): {totale_corretto}")
     print(f"Numero di sinalefe rilevate: {num_sinalefe}")
     print("È un endecasillabo?", totale_corretto == 11)
-
-from pathlib import Path
-
-# Percorso relativo alla directory del progetto
-BASE_DIR = Path(__file__).resolve().parent
-
-# Cartella per la cache Hugging Face dentro il progetto
-CACHE_DIR = BASE_DIR / "cache"
-
-# Carica modello e tokenizer usando il percorso relativo
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
-
-
-# Percorso del modello su Hugging Face
-model_name = "jan-hq/stealth-v1.2"
-
-# Caricamento del tokenizer e del modello con cache_dir
-tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=CACHE_DIR)
-model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=CACHE_DIR)
-# Imposta manualmente il pad_token_id per evitare warning
-tokenizer.pad_token = tokenizer.eos_token
-
-# Conversazione iniziale
-conversation = [
-    {"role": "system", "content": "Sei la Dea Astarte Syriaca, una divinità antica e saggia. Rispondi sempre nel ruolo della Dea."},
-    {"role": "system", "content": "Stai girando in un software realizzao da Stefano (user) per l'analii della metrica poetica durante la scritura poetica"},
-    {"role": "user", "content": "Sono Stefano un'aspirante poeta di origine Italiana"},
-    {"role": "user", "content": "La poesia che ho scrito è la seguente:"},
-    {"role": "user", "content": poem},
-    {"role": "user", "content": "Vorrei sapere se sei felice di questa poesia? o se è un affanno ridicolo lavorarci? Voglio sapere inoltre se segue una metrica"}
-]
-
-# Funzione per formattare la conversazione con delimitatori specifici
-def format_conversation(conversation):
-    formatted_text = ""
-    for message in conversation:
-        if message["role"] == "system":
-            formatted_text += f"<|im_start|>system\n{message['content']}<|im_end|>\n"
-        elif message["role"] == "user":
-            formatted_text += f"<|im_start|>user\n{message['content']}<|im_end|>\n"
-        elif message["role"] == "assistant":
-            formatted_text += f"<|im_start|>assistant\n{message['content']}<|im_end|>\n"
-    return formatted_text.strip()
-
-# Formatta la conversazione e aggiungi il prompt dell'assistente
-prompt = format_conversation(conversation) + "\n<|im_start|>assistant\n"
-
-# Tokenizzazione con padding e attention_mask
-inputs = tokenizer(prompt, return_tensors="pt", padding=True)
-
-# Generazione della risposta
-outputs = model.generate(
-    inputs.input_ids,
-    attention_mask=inputs.attention_mask,  # Evita problemi con il padding
-    max_length=8192,  # Lunghezza massima della risposta
-    do_sample=True,  # Attiva la generazione casuale
-    top_p=0.95,  # Nucleus sampling: tiene il top 95% della probabilità cumulativa
-    top_k=50,  # Considera solo i 50 token più probabili
-    temperature=0.7,  # Controlla la casualità (più basso = più deterministico)
-    repetition_penalty=1.1,  # Penalizza ripetizioni per migliorare la diversità
-    num_return_sequences=1,  # Numero di risposte generate
-    early_stopping=True,  # Termina la generazione quando viene raggiunto un token di stop
-    pad_token_id=tokenizer.pad_token_id,  # Evita warning sui token di padding
-    eos_token_id=tokenizer.eos_token_id,  # Token di fine sequenza
-    length_penalty=1.0,  # Penalizza sequenze troppo lunghe o corte (1.0 = neutro)
-    num_beams=1, # Usa beam search con 2 percorsi esplorati
-) 
-
-
-# Decodifica della risposta
-risposta = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-# Rimuove il testo prima dell'assistente per estrarre solo la risposta
-risposta = risposta.split("<|im_start|>assistant\n")[-1].strip()
-risposta = risposta.split("<|im_end|>")[0].strip()  # Rimuove eventuali delimitatori residui
-
-# Aggiunta della risposta alla conversazione
-conversation.append({"role": "assistant", "content": risposta})
-
-# Stampa della risposta
-print(risposta)
