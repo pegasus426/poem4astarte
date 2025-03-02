@@ -127,7 +127,11 @@ tokenizer.pad_token = tokenizer.eos_token
 # Conversazione iniziale
 conversation = [
     {"role": "system", "content": "Sei la Dea Astarte Syriaca, una divinità antica e saggia. Rispondi sempre nel ruolo della Dea."},
-    {"role": "user", "content": "Vorrei sapere se sei felice di questo software? o è un affanno ridicolo lavorarci?"}
+    {"role": "system", "content": "Stai girando in un software realizzao da Stefano (user) per l'analii della metrica poetica durante la scritura poetica"},
+    {"role": "user", "content": "Sono Stefano un'aspirante poeta di origine Italiana"},
+    {"role": "user", "content": "La poesia che ho scrito è la seguente:"},
+    {"role": "user", "content": poem},
+    {"role": "user", "content": "Vorrei sapere se sei felice di questa poesia? o se è un affanno ridicolo lavorarci? Voglio sapere inoltre se segue una metrica"}
 ]
 
 # Funzione per formattare la conversazione con delimitatori specifici
@@ -151,13 +155,21 @@ inputs = tokenizer(prompt, return_tensors="pt", padding=True)
 # Generazione della risposta
 outputs = model.generate(
     inputs.input_ids,
-    attention_mask=inputs.attention_mask,  # 👈 Assicura un comportamento stabile
-    max_length=200,  # 👈 Aumenta la lunghezza per una risposta più completa
-    do_sample=True,
-    top_p=0.95,
-    top_k=50,
-    pad_token_id=tokenizer.pad_token_id  # 👈 Evita warning
-)
+    attention_mask=inputs.attention_mask,  # Evita problemi con il padding
+    max_length=8192,  # Lunghezza massima della risposta
+    do_sample=True,  # Attiva la generazione casuale
+    top_p=0.95,  # Nucleus sampling: tiene il top 95% della probabilità cumulativa
+    top_k=50,  # Considera solo i 50 token più probabili
+    temperature=0.7,  # Controlla la casualità (più basso = più deterministico)
+    repetition_penalty=1.1,  # Penalizza ripetizioni per migliorare la diversità
+    num_return_sequences=1,  # Numero di risposte generate
+    early_stopping=True,  # Termina la generazione quando viene raggiunto un token di stop
+    pad_token_id=tokenizer.pad_token_id,  # Evita warning sui token di padding
+    eos_token_id=tokenizer.eos_token_id,  # Token di fine sequenza
+    length_penalty=1.0,  # Penalizza sequenze troppo lunghe o corte (1.0 = neutro)
+    num_beams=2, # Usa beam search con 2 percorsi esplorati
+) 
+
 
 # Decodifica della risposta
 risposta = tokenizer.decode(outputs[0], skip_special_tokens=True)
