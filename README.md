@@ -5,6 +5,9 @@ Opensource poetry writing toolset and copilot
 ## Suported laguages
 This tool is in initial development for now only italian is available
 
+## Supported copilots
+This tool is in initial development for now only jan-hq/stealth-v.1.2 is available
+
 ## Backend 
 cd be
 ### frist time italian

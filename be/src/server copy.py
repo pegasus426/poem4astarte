@@ -111,37 +111,34 @@ BASE_DIR = Path(__file__).resolve().parent
 CACHE_DIR = BASE_DIR / "cache"
 
 # Carica modello e tokenizer usando il percorso relativo
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
+#model_name = "EleutherAI/gpt-neo-2.7B"
 # Modello e tokenizer
-model_name = "jan-hq/stealth-v1.2" #https://huggingface.co/jan-hq/stealth-v1.2
+model_name = "jan-hq/stealth-v1.2"
 tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=str(CACHE_DIR))
 model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=str(CACHE_DIR))
 
 # Creazione della conversazione
 conversation = [
-    {"role": "system", "content": "Sei la Dea Astarte Syriaca, una divinità antica e saggia. Rispondi sempre nel ruolo della Dea."},
+    {"role": "system", "content": "Sei la Dea Astarte Syriaca, una divinità antica e saggia."},
     {"role": "user", "content": "Vorrei sapere se sei felice di questo software?"}
 ]
 
-# Funzione per formattare la conversazione con delimitatori specifici
+# Funzione per formattare la conversazione in un prompt
 def format_conversation(conversation):
     formatted_text = ""
     for message in conversation:
         if message["role"] == "system":
-            formatted_text += f"<|im_start|>system\n{message['content']}<|im_end|>\n"
+            formatted_text += f"System: {message['content']}\n"
         elif message["role"] == "user":
-            formatted_text += f"<|im_start|>user\n{message['content']}<|im_end|>\n"
+            formatted_text += f"User: {message['content']}\n"
         elif message["role"] == "assistant":
-            formatted_text += f"<|im_start|>assistant\n{message['content']}<|im_end|>\n"
+            formatted_text += f"Assistant: {message['content']}\n"
     return formatted_text.strip()
 
 # Formattazione della conversazione
 prompt = format_conversation(conversation)
-
-# Aggiungi il token di inizio per l'assistente (se necessario)
-prompt += "\n<|im_start|>assistant\n"
 
 # Tokenizzazione e generazione della risposta
 input_ids = tokenizer(prompt, return_tensors="pt").input_ids
@@ -149,10 +146,6 @@ output = model.generate(input_ids, max_length=100, do_sample=True, top_p=0.95, t
 
 # Decodifica della risposta
 risposta = tokenizer.decode(output[0], skip_special_tokens=True)
-
-# Rimuovi eventuali delimitatori dalla risposta generata
-if "<|im_end|>" in risposta:
-    risposta = risposta.split("<|im_end|>")[0].strip()
 
 # Aggiunta della risposta alla conversazione
 conversation.append({"role": "assistant", "content": risposta})
