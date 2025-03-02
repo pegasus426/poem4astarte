@@ -167,7 +167,7 @@ outputs = model.generate(
     pad_token_id=tokenizer.pad_token_id,  # Evita warning sui token di padding
     eos_token_id=tokenizer.eos_token_id,  # Token di fine sequenza
     length_penalty=1.0,  # Penalizza sequenze troppo lunghe o corte (1.0 = neutro)
-    num_beams=2, # Usa beam search con 2 percorsi esplorati
+    num_beams=1, # Usa beam search con 2 percorsi esplorati
 ) 
 
 
