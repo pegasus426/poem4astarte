@@ -114,15 +114,20 @@ CACHE_DIR = BASE_DIR / "cache"
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-# Modello e tokenizer
-model_name = "jan-hq/stealth-v1.2" #https://huggingface.co/jan-hq/stealth-v1.2
-tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=str(CACHE_DIR))
-model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=str(CACHE_DIR))
 
-# Creazione della conversazione
+# Percorso del modello su Hugging Face
+model_name = "jan-hq/stealth-v1.2"
+
+# Caricamento del tokenizer e del modello con cache_dir
+tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=CACHE_DIR)
+model = AutoModelForCausalLM.from_pretrained(model_name, cache_dir=CACHE_DIR)
+# Imposta manualmente il pad_token_id per evitare warning
+tokenizer.pad_token = tokenizer.eos_token
+
+# Conversazione iniziale
 conversation = [
     {"role": "system", "content": "Sei la Dea Astarte Syriaca, una divinità antica e saggia. Rispondi sempre nel ruolo della Dea."},
-    {"role": "user", "content": "Vorrei sapere se sei felice di questo software?"}
+    {"role": "user", "content": "Vorrei sapere se sei felice di questo software? o è un affanno ridicolo lavorarci?"}
 ]
 
 # Funzione per formattare la conversazione con delimitatori specifici
@@ -137,22 +142,29 @@ def format_conversation(conversation):
             formatted_text += f"<|im_start|>assistant\n{message['content']}<|im_end|>\n"
     return formatted_text.strip()
 
-# Formattazione della conversazione
-prompt = format_conversation(conversation)
+# Formatta la conversazione e aggiungi il prompt dell'assistente
+prompt = format_conversation(conversation) + "\n<|im_start|>assistant\n"
 
-# Aggiungi il token di inizio per l'assistente (se necessario)
-prompt += "\n<|im_start|>assistant\n"
+# Tokenizzazione con padding e attention_mask
+inputs = tokenizer(prompt, return_tensors="pt", padding=True)
 
-# Tokenizzazione e generazione della risposta
-input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-output = model.generate(input_ids, max_length=100, do_sample=True, top_p=0.95, top_k=50)
+# Generazione della risposta
+outputs = model.generate(
+    inputs.input_ids,
+    attention_mask=inputs.attention_mask,  # 👈 Assicura un comportamento stabile
+    max_length=200,  # 👈 Aumenta la lunghezza per una risposta più completa
+    do_sample=True,
+    top_p=0.95,
+    top_k=50,
+    pad_token_id=tokenizer.pad_token_id  # 👈 Evita warning
+)
 
 # Decodifica della risposta
-risposta = tokenizer.decode(output[0], skip_special_tokens=True)
+risposta = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-# Rimuovi eventuali delimitatori dalla risposta generata
-if "<|im_end|>" in risposta:
-    risposta = risposta.split("<|im_end|>")[0].strip()
+# Rimuove il testo prima dell'assistente per estrarre solo la risposta
+risposta = risposta.split("<|im_start|>assistant\n")[-1].strip()
+risposta = risposta.split("<|im_end|>")[0].strip()  # Rimuove eventuali delimitatori residui
 
 # Aggiunta della risposta alla conversazione
 conversation.append({"role": "assistant", "content": risposta})
