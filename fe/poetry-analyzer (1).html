@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poet - Analizzatore di Poesie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Playfair Display', serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f5f1;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #5d4037;
+            font-style: italic;
+        }
+        
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+            color: #6d6d6d;
+        }
+        
+        .poetry-container {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        
+        .poetry-input {
+            flex: 1;
+            padding: 15px;
+        }
+        
+        .poetry-analysis {
+            flex: 1;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            resize: none;
+        }
+        
+        button {
+            background-color: #5d4037;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #8d6e63;
+        }
+        
+        .verse-analysis {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid #ddd;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .verse-original {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .verse-syllables {
+            color: #6d6d6d;
+            font-size: 14px;
+        }
+        
+        .syllable {
+            display: inline-block;
+            padding: 2px 5px;
+            margin: 0 2px;
+            background-color: #efe1d1;
+            border-radius: 3px;
+        }
+        
+        .rhyme-tag {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .example-button {
+            background-color: #8d6e63;
+            margin-right: 10px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .examples {
+            margin-bottom: 20px;
+        }
+        
+        .rhyme-legend {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        
+        .rhyme-legend h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .legend-item:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Stile per l'effetto hover delle rime */
+        .highlight-rhyme {
+            background-color: rgba(253, 245, 230, 0.8);
+            border-left: 3px solid;
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .poetry-container {
+                flex-direction: column;
+            }
+            
+            .poetry-input, .poetry-analysis {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Poet <i class="fas fa-feather-alt"></i></h1>
+        <p class="description">Analizza la tua poesia, scopri la struttura sillabica e lo schema delle rime</p>
+        
+        <div class="examples">
+            <button id="example1" class="example-button">Esempio: Sonetto</button>
+            <button id="example2" class="example-button">Esempio: Canzone</button>
+        </div>
+        
+        <div class="controls">
+            <button id="analyze-btn"><i class="fas fa-magic"></i> Analizza</button>
+            <button id="clear-btn"><i class="fas fa-trash"></i> Cancella</button>
+        </div>
+        
+        <div class="poetry-container">
+            <div class="poetry-input">
+                <textarea id="poetry-text" placeholder="Inserisci qui la tua poesia..."></textarea>
+            </div>
+            <div class="poetry-analysis" id="analysis-results">
+                <p>L'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>
+            </div>
+        </div>
+        
+        <div class="rhyme-legend" id="rhyme-legend">
+            <h3>Legenda delle Rime:</h3>
+            <div id="legend-content">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funzione per dividere una parola italiana in sillabe
+        function syllabify(word) {
+            if (!word) return [];
+            
+            word = word.toLowerCase().trim();
+            
+            // Rimuovi punteggiatura alla fine
+            word = word.replace(/[.,;:!?'"]+$/, '');
+            
+            // Se la parola è troppo corta, considerala come un'unica sillaba
+            if (word.length <= 2) {
+                return [word];
+            }
+            
+            // Dittonghi e trittonghi comuni in italiano
+            const diphthongs = ['ia', 'ie', 'io', 'iu', 'ai', 'ei', 'oi', 'ui', 'au', 'eu'];
+            const triphthongs = ['iai', 'iei', 'uai', 'uei', 'uoi'];
+            
+            // Vocali
+            const vowels = 'aeiouàèéìòóù';
+            
+            // Array per le sillabe
+            let syllables = [];
+            let currentSyllable = '';
+            let i = 0;
+            
+            while (i < word.length) {
+                currentSyllable += word[i];
+                
+                // Controlla se abbiamo un trittongo
+                if (i + 2 < word.length) {
+                    let possibleTriphthong = word.substr(i, 3);
+                    if (triphthongs.includes(possibleTriphthong)) {
+                        // Aggiungi il resto del trittongo alla sillaba corrente
+                        if (i + 1 < word.length) currentSyllable += word[i+1];
+                        if (i + 2 < word.length) currentSyllable += word[i+2];
+                        i += 3;
+                        continue;
+                    }
+                }
+                
+                // Controlla se abbiamo un dittongo
+                if (i + 1 < word.length) {
+                    let possibleDiphthong = word.substr(i, 2);
+                    if (diphthongs.includes(possibleDiphthong)) {
+                        // Aggiungi la seconda parte del dittongo alla sillaba corrente
+                        if (i + 1 < word.length) currentSyllable += word[i+1];
+                        i += 2;
+                        continue;
+                    }
+                }
+                
+                // Se la lettera corrente è una vocale e non è l'ultima lettera
+                if (vowels.includes(word[i]) && i < word.length - 1) {
+                    // Se la prossima lettera è una vocale e non forma un dittongo, dividi
+                    if (vowels.includes(word[i+1])) {
+                        syllables.push(currentSyllable);
+                        currentSyllable = '';
+                    } 
+                    // Se la prossima lettera è una consonante
+                    else {
+                        // Se ci sono 2 o più consonanti dopo (non l'ultima lettera)
+                        if (i + 2 < word.length && !vowels.includes(word[i+1]) && !vowels.includes(word[i+2])) {
+                            // Gestione di gruppi consonantici come 'str', 'pr', 'gr', etc.
+                            if (i + 3 < word.length && 
+                                ((word[i+1] === 's' && !vowels.includes(word[i+2]) && !vowels.includes(word[i+3])) ||
+                                 (['b', 'c', 'd', 'f', 'g', 'p', 't'].includes(word[i+1]) && ['l', 'r'].includes(word[i+2])))) {
+                                syllables.push(currentSyllable);
+                                currentSyllable = '';
+                            } else {
+                                syllables.push(currentSyllable);
+                                currentSyllable = '';
+                            }
+                        }
+                    }
+                }
+                
+                i++;
+                
+                // Se siamo arrivati alla fine della parola, aggiungi l'ultima sillaba
+                if (i === word.length && currentSyllable) {
+                    syllables.push(currentSyllable);
+                }
+            }
+            
+            // Se non abbiamo diviso la parola, considerala come un'unica sillaba
+            if (syllables.length === 0 && currentSyllable) {
+                syllables.push(currentSyllable);
+            }
+            
+            return syllables;
+        }
+        
+        // Funzione per determinare la rima
+        function getRhyme(word) {
+            if (!word) return '';
+            
+            word = word.toLowerCase().trim().replace(/[.,;:!?'"]+$/, '');
+            
+            // Prendi le ultime 2-3 lettere come rima (semplificato)
+            if (word.length <= 3) {
+                return word;
+            }
+            
+            // Trova l'ultima vocale
+            const vowels = 'aeiouàèéìòóù';
+            let lastVowelIndex = -1;
+            
+            for (let i = word.length - 1; i >= 0; i--) {
+                if (vowels.includes(word[i])) {
+                    lastVowelIndex = i;
+                    break;
+                }
+            }
+            
+            if (lastVowelIndex === -1) {
+                return word.slice(-2); // Nessuna vocale trovata, usa le ultime 2 lettere
+            }
+            
+            // Prendi dalla vocale fino alla fine
+            return word.slice(lastVowelIndex);
+        }
+        
+        // Funzione per generare un colore basato su una stringa
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const hue = Math.abs(hash % 360);
+            return `hsl(${hue}, 70%, 40%)`;
+        }
+        
+        // Funzione principale per analizzare la poesia
+        function analyzePoetry() {
+            const poetryText = document.getElementById('poetry-text').value;
+            const analysisResults = document.getElementById('analysis-results');
+            const legendContent = document.getElementById('legend-content');
+            
+            if (!poetryText.trim()) {
+                analysisResults.innerHTML = '<p>Inserisci una poesia da analizzare.</p>';
+                return;
+            }
+            
+            const verses = poetryText.split('\n').filter(verse => verse.trim());
+            
+            if (verses.length === 0) {
+                analysisResults.innerHTML = '<p>Inserisci almeno un verso.</p>';
+                return;
+            }
+            
+            // Analizza le rime e trova i pattern
+            const rhymes = verses.map(verse => {
+                const words = verse.trim().split(/\s+/);
+                const lastWord = words[words.length - 1];
+                return getRhyme(lastWord);
+            });
+            
+            // Crea un map delle rime uniche
+            const uniqueRhymes = [...new Set(rhymes)];
+            const rhymeScheme = {};
+            const rhymeColors = {};
+            
+            // Assegna una lettera a ogni rima unica (a, b, c, ...)
+            uniqueRhymes.forEach((rhyme, index) => {
+                const letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
+                rhymeScheme[rhyme] = letter;
+                rhymeColors[letter] = stringToColor(rhyme);
+            });
+            
+            // Genera l'output dell'analisi
+            let analysisHTML = '';
+            
+            verses.forEach((verse, index) => {
+                const syllables = verse.trim().split(/\s+/)
+                    .flatMap(word => syllabify(word));
+                
+                const rhyme = rhymes[index];
+                const rhymeLetter = rhymeScheme[rhyme];
+                const rhymeColor = rhymeColors[rhymeLetter];
+                
+                analysisHTML += `
+                    <div class="verse-analysis" data-rhyme="${rhymeLetter}">
+                        <div class="verse-original">${verse.trim()}
+                            <span class="rhyme-tag" style="background-color: ${rhymeColor};">${rhymeLetter}</span>
+                        </div>
+                        <div class="verse-syllables">
+                            ${syllables.map(s => `<span class="syllable">${s}</span>`).join(' ')}
+                            <span>(${syllables.length} sillabe)</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Genera la legenda delle rime
+            let legendHTML = '';
+            for (const letter in rhymeColors) {
+                legendHTML += `
+                    <div class="legend-item" data-rhyme="${letter}">
+                        <span class="rhyme-tag" style="background-color: ${rhymeColors[letter]};">${letter}</span>
+                        <span>${uniqueRhymes[letter.charCodeAt(0) - 97]}</span>
+                    </div>
+                `;
+            }
+            
+            // Aggiorna i risultati
+            analysisResults.innerHTML = analysisHTML;
+            legendContent.innerHTML = legendHTML;
+            
+            // Aggiungi effetto hover per evidenziare le rime
+            setupRhymeHighlighting();
+        }
+        
+        // Funzione per configurare l'evidenziazione delle rime al passaggio del mouse
+        function setupRhymeHighlighting() {
+            // Aggiungi effetto hover ai versi
+            const verses = document.querySelectorAll('.verse-analysis');
+            verses.forEach(verse => {
+                verse.addEventListener('mouseenter', function() {
+                    const rhymeType = this.getAttribute('data-rhyme');
+                    highlightRhymes(rhymeType);
+                });
+                
+                verse.addEventListener('mouseleave', function() {
+                    resetHighlights();
+                });
+            });
+            
+            // Aggiungi effetto hover agli elementi della legenda
+            const legendItems = document.querySelectorAll('.legend-item');
+            legendItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    const rhymeType = this.getAttribute('data-rhyme');
+                    highlightRhymes(rhymeType);
+                });
+                
+                item.addEventListener('mouseleave', function() {
+                    resetHighlights();
+                });
+            });
+        }
+        
+        // Funzione per evidenziare le rime dello stesso tipo
+        function highlightRhymes(rhymeType) {
+            const verses = document.querySelectorAll(`.verse-analysis[data-rhyme="${rhymeType}"]`);
+            verses.forEach(verse => {
+                verse.classList.add('highlight-rhyme');
+                const rhymeColor = verse.querySelector('.rhyme-tag').style.backgroundColor;
+                verse.style.borderLeftColor = rhymeColor;
+            });
+        }
+        
+        // Funzione per rimuovere l'evidenziazione
+        function resetHighlights() {
+            const verses = document.querySelectorAll('.verse-analysis');
+            verses.forEach(verse => {
+                verse.classList.remove('highlight-rhyme');
+                verse.style.borderLeftColor = '';
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('analyze-btn').addEventListener('click', analyzePoetry);
+        
+        document.getElementById('clear-btn').addEventListener('click', function() {
+            document.getElementById('poetry-text').value = '';
+            document.getElementById('analysis-results').innerHTML = '<p>L\'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>';
+            document.getElementById('legend-content').innerHTML = '';
+        });
+        
+        // Esempi
+        document.getElementById('example1').addEventListener('click', function() {
+            document.getElementById('poetry-text').value = `Tanto gentile e tanto onesta pare
+la donna mia, quand'ella altrui saluta,
+ch'ogne lingua devèn, tremando, muta,
+e li occhi no l'ardiscon di guardare.
+
+Ella si va, sentendosi laudare,
+benignamente e d'umiltà vestuta,
+e par che sia una cosa venuta
+da cielo in terra a miracol mostrare.`;
+            analyzePoetry();
+        });
+        
+        document.getElementById('example2').addEventListener('click', function() {
+            document.getElementById('poetry-text').value = `Chiare, fresche e dolci acque,
+ove le belle membra
+pose colei che sola a me par donna;
+gentil ramo ove piacque
+(con sospir mi rimembra)
+a lei di fare al bel fianco colonna;
+erba e fior che la gonna
+leggiadra ricoverse
+co l'angelico seno;
+aere sacro, sereno,
+ove Amor co' begli occhi il cor m'aperse:
+date udienza insieme
+a le dolenti mie parole estreme.`;
+            analyzePoetry();
+        });
+    </script>
+</body>
+</html>

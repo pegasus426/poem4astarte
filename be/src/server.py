@@ -5,18 +5,18 @@ from spacy_syllables import SpacySyllables
 
 # --- Configurazione SQLite per le eccezioni metriche ---
 DB_PATH = "eccezioni_metriche.db"
+locale = "it"
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    # Crea la tabella se non esiste
     cur.execute("""
         CREATE TABLE IF NOT EXISTS eccezioni (
             parola TEXT PRIMARY KEY,
-            sillabe INTEGER
+            sillabe INTEGER,
+            locale TEXT
         )
     """)
-    # Inserisce le eccezioni iniziali se non già presenti
     eccezioni_iniziali = {
         "mio": 2,
         "tuo": 2,
@@ -28,32 +28,28 @@ def init_db():
         "io": 2,
         "l'primo": 3,
         "ch'intrate": 3,
+        "sapïenza": 4,
     }
     for parola, sillabe in eccezioni_iniziali.items():
-        # Usa INSERT OR IGNORE per non sovrascrivere eventuali valori già presenti
-        cur.execute("INSERT OR IGNORE INTO eccezioni (parola, sillabe) VALUES (?, ?)", (parola, sillabe))
+        cur.execute("INSERT OR IGNORE INTO eccezioni (parola, sillabe, locale) VALUES (?, ?, ?)", (parola, sillabe, locale))
     conn.commit()
     conn.close()
 
 def load_eccezioni():
-    """Recupera le eccezioni dal database e le restituisce in un dizionario."""
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT parola, sillabe FROM eccezioni")
+    cur.execute("SELECT parola, sillabe FROM eccezioni WHERE locale =?", (locale,))
     rows = cur.fetchall()
     conn.close()
     return {row[0]: row[1] for row in rows}
 
-# Inizializza il DB e carica le eccezioni
 init_db()
 ECCEZIONI = load_eccezioni()
 
-# --- Caricamento modello spaCy e modulo sillabe ---
-nlp = spacy.load("it_core_news_sm")
+nlp = spacy.load(locale + "_core_news_sm")
 syllables = SpacySyllables(nlp)
 nlp.add_pipe("syllables", after="tagger")
 
-# Testo da analizzare (Dante)
 poem = """Per me si va ne la città dolente,
 per me si va ne l'etterno dolore,
 per me si va tra la perduta gente.
@@ -67,22 +63,11 @@ se non etterne, e io etterno duro.
 Lasciate ogne speranza, voi ch'intrate."""
 
 def preprocess_text(text):
-    """
-    Pre-elabora il testo per unire le forme contratte.
-    Rimuove spazi prima degli apostrofi e unisce sequenze come "l' amore" in "l'amore".
-    """
     text = re.sub(r"\s+['’]", "'", text)
     text = re.sub(r"\b(l|d|s|ch)['’]\s+", r"\1'", text)
     return text
 
 def conta_sillabe_token(token):
-    ECCEZIONI = load_eccezioni()
-    """
-    Restituisce il numero di sillabe per il token.
-    Se il token è vuoto o è solo punteggiatura, restituisce 0.
-    Se il token (pulito) è presente in ECCEZIONI, restituisce il valore definito.
-    Altrimenti, usa il conteggio della libreria.
-    """
     token_text = token.text.strip(" '’\".,;:!?").lower()
     if not token_text:
         return 0
@@ -91,11 +76,6 @@ def conta_sillabe_token(token):
     return token._.syllables_count if token._.syllables_count else 0
 
 def conta_sinalefe_token(doc):
-    """
-    Conta le sinalefe nel documento (lista di token).
-    Una sinalefa si verifica se la fine di un token e l'inizio del successivo sono vocali.
-    Ignora token di punteggiatura e gestisce il caso in cui il token successivo inizi con "h" muta.
-    """
     vowels = "aeiouàèéìòóù"
     count = 0
     for i in range(len(doc) - 1):
@@ -112,16 +92,9 @@ def conta_sinalefe_token(doc):
     return count
 
 def conta_sillabe_corrette(doc):
-    """
-    Calcola il totale delle sillabe in un verso:
-      - Somma le sillabe di ogni token (utilizzando le eccezioni)
-      - Sottrae il numero di sinalefe
-      - Se l'ultimo token utile termina con vocale accentata (verso tronco), aggiunge 1 sillaba.
-    """
     totale_sillabe = sum(conta_sillabe_token(token) for token in doc)
     num_sinalefe = conta_sinalefe_token(doc)
     totale_corretto = totale_sillabe - num_sinalefe
-
     tokens_utili = [token for token in doc if conta_sillabe_token(token) > 0]
     if tokens_utili:
         ultimo = tokens_utili[-1].text.strip(" '’\".,;:!?")
@@ -129,11 +102,9 @@ def conta_sillabe_corrette(doc):
             totale_corretto += 1
     return totale_corretto, num_sinalefe, doc
 
-# Elaborazione verso per verso
 for verso in poem.split("\n"):
     if not verso.strip():
         continue
-    # Pre-elabora il verso per unire le forme contratte
     verso_pre = preprocess_text(verso)
     doc = nlp(verso_pre)
     totale_corretto, num_sinalefe, doc = conta_sillabe_corrette(doc)

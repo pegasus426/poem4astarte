@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poet - Analizzatore di Poesie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f5f1;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #5d4037;
+            font-style: italic;
+        }
+
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+            color: #6d6d6d;
+        }
+
+        .poetry-container {
+            display: flex;
+            margin-bottom: 30px;
+        }
+
+        .poetry-input {
+            flex: 1;
+            padding: 15px;
+        }
+
+        .poetry-analysis {
+            flex: 1;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            resize: none;
+        }
+
+        button {
+            background-color: #5d4037;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-family: 'Playfair Display', serif;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #8d6e63;
+        }
+
+        .verse-analysis {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid #ddd;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .verse-original {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .verse-syllables {
+            color: #6d6d6d;
+            font-size: 14px;
+        }
+
+        .syllable {
+            display: inline-block;
+            padding: 2px 5px;
+            margin: 0 2px;
+            background-color: #efe1d1;
+            border-radius: 3px;
+        }
+
+        .rhyme-tag {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .example-button {
+            background-color: #8d6e63;
+            margin-right: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .examples {
+            margin-bottom: 20px;
+        }
+
+        .analysis-footer {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .rhyme-legend {
+            flex: 1;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .rhyme-scheme {
+            flex: 1;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-left: 15px;
+        }
+
+        .rhyme-legend h3,
+        .rhyme-scheme h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .legend-item:hover {
+            transform: scale(1.1);
+        }
+
+        .schema-display {
+            font-size: 18px;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .schema-letter {
+            display: inline-block;
+            padding: 2px 5px;
+            margin: 0 3px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .schema-letter:hover {
+            transform: scale(1.2);
+        }
+
+        /* Stile per l'effetto hover delle rime */
+        .highlight-rhyme {
+            background-color: rgba(253, 245, 230, 0.8);
+            border-left: 3px solid;
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .debug-info {
+            font-size: 12px;
+            color: #999;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        .verse-meter {
+            font-size: 14px;
+            color: #5d4037;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .poetry-container {
+                flex-direction: column;
+            }
+
+            .poetry-input,
+            .poetry-analysis {
+                width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .analysis-footer {
+                flex-direction: column;
+            }
+
+            .rhyme-scheme {
+                margin-left: 0;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Poet <i class="fas fa-feather-alt"></i></h1>
+        <p class="description">Analizza la tua poesia, scopri la struttura sillabica e lo schema delle rime</p>
+
+        <div class="examples">
+            <button id="example1" class="example-button">Esempio: Sonetto</button>
+            <button id="example2" class="example-button">Esempio: Canzone</button>
+            <button id="example3" class="example-button">Esempio: Endecasillabi</button>
+        </div>
+
+        <div class="controls">
+            <button id="analyze-btn"><i class="fas fa-magic"></i> Analizza</button>
+            <button id="clear-btn"><i class="fas fa-trash"></i> Cancella</button>
+        </div>
+
+        <div class="poetry-container">
+            <div class="poetry-input">
+                <textarea id="poetry-text" placeholder="Inserisci qui la tua poesia..."></textarea>
+            </div>
+            <div class="poetry-analysis" id="analysis-results">
+                <p>L'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>
+            </div>
+        </div>
+
+        <div class="analysis-footer">
+            <div class="rhyme-legend" id="rhyme-legend">
+                <h3>Legenda delle Rime:</h3>
+                <div id="legend-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="rhyme-scheme" id="rhyme-scheme">
+                <h3>Schema delle Rime:</h3>
+                <div id="scheme-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //Funzione migliorata per dividere una parola italiana in sillabe secondo le regole poetiche
+        function syllabify(word) {
+            if (!word) return [];
+
+            word = word.toLowerCase().trim();
+
+            // Rimuovi punteggiatura alla fine e all'inizio
+            word = word.replace(/[.,;:!?'")\-]+$/, '');
+            word = word.replace(/^['"\-(]+/, '');
+
+            // Se la parola è troppo corta, considerala come un'unica sillaba
+            if (word.length <= 2) {
+                return [word];
+            }
+
+            // Vocali
+            const vowels = 'aeiouàèéìòóùy';
+
+            // Dittonghi e trittonghi comuni in italiano
+            const diphthongs = ['ia', 'ie', 'io', 'iu', 'ai', 'ei', 'oi', 'ui', 'au', 'eu'];
+            // Dittonghi con accento che formano iato (si dividono)
+            const hiatus = ['ìa', 'ìe', 'ìo', 'ùi', 'ùe', 'ùo', 'àe', 'èa', 'èo', 'òe'];
+            const triphthongs = ['iai', 'iei', 'uai', 'uei', 'uoi'];
+
+            // Array per le sillabe
+            let syllables = [];
+            let currentSyllable = '';
+            let i = 0;
+
+            // Funzione per verificare se una combinazione è un gruppo consonantico inseparabile
+            function isInseparableCluster(str) {
+                const clusters = ['br', 'cr', 'dr', 'fr', 'gr', 'pr', 'tr', 'vr',
+                    'bl', 'cl', 'dl', 'fl', 'gl', 'pl', 'tl', 'vl',
+                    'ch', 'gh', 'gn', 'sc', 'qu'];
+                return clusters.some(cluster => str.startsWith(cluster));
+            }
+
+            while (i < word.length) {
+                currentSyllable += word[i];
+
+                // Controlla se abbiamo un trittongo
+                if (i + 2 < word.length) {
+                    let possibleTriphthong = word.substr(i, 3);
+                    if (triphthongs.includes(possibleTriphthong)) {
+                        // Aggiungi il resto del trittongo alla sillaba corrente
+                        if (i + 1 < word.length) currentSyllable += word[i + 1];
+                        if (i + 2 < word.length) currentSyllable += word[i + 2];
+                        i += 3;
+                        continue;
+                    }
+                }
+
+                // Controlla se abbiamo un dittongo o uno iato
+                if (i + 1 < word.length) {
+                    let possibleDiphthong = word.substr(i, 2);
+
+                    // Se è uno iato, dobbiamo dividere le vocali in sillabe diverse
+                    if (hiatus.includes(possibleDiphthong)) {
+                        if (vowels.includes(word[i])) {
+                            syllables.push(currentSyllable);
+                            currentSyllable = '';
+                        }
+                    }
+                    // Se è un dittongo, teniamo le vocali insieme
+                    else if (diphthongs.includes(possibleDiphthong)) {
+                        // Aggiungi la seconda parte del dittongo alla sillaba corrente
+                        if (i + 1 < word.length) currentSyllable += word[i + 1];
+                        i += 2;
+                        continue;
+                    }
+                }
+
+                // Se la lettera corrente è una vocale e non è l'ultima lettera
+                if (vowels.includes(word[i]) && i < word.length - 1) {
+                    // Se la prossima lettera è una vocale (e non forma un dittongo già gestito sopra)
+                    if (vowels.includes(word[i + 1])) {
+                        syllables.push(currentSyllable);
+                        currentSyllable = '';
+                    }
+                    // Se la prossima lettera è una consonante
+                    else {
+                        // Gestione speciale per S + consonante
+                        if (i + 2 < word.length && word[i + 1] === 's' && !vowels.includes(word[i + 2])) {
+                            syllables.push(currentSyllable);
+                            currentSyllable = '';
+                        }
+                        // Gestione per gruppi consonantici inseparabili
+                        else if (i + 2 < word.length && !vowels.includes(word[i + 1]) && !vowels.includes(word[i + 2])) {
+                            if (isInseparableCluster(word.substr(i + 1, 2))) {
+                                syllables.push(currentSyllable);
+                                currentSyllable = '';
+                            } else {
+                                // Se non è un gruppo inseparabile, dividi tra le consonanti
+                                syllables.push(currentSyllable + word[i + 1]);
+                                i++;
+                                currentSyllable = '';
+                            }
+                        } else if (i + 1 < word.length - 1) {
+                            // Per consonante singola seguita da vocale, la consonante va con la vocale successiva
+                            syllables.push(currentSyllable);
+                            currentSyllable = '';
+                        }
+                    }
+                }
+
+                i++;
+
+                // Se siamo arrivati alla fine della parola, aggiungi l'ultima sillaba
+                if (i === word.length && currentSyllable) {
+                    syllables.push(currentSyllable);
+                }
+            }
+
+            // Se non abbiamo diviso la parola, considerala come un'unica sillaba
+            if (syllables.length === 0 && currentSyllable) {
+                syllables.push(currentSyllable);
+            }
+
+            return syllables;
+        }
+
+            // Classificazione basata sulla metrica italiana classica
+    let verseType = "";
+      // Rilevamento di sinalefe, dialefe, sineresi, dieresi per il conteggio metrico
+function countMetricSyllables(verse) {
+    // Normalizza il verso
+    verse = verse.trim();
+
+    // Dividi il verso in parole
+    const words = verse.split(/\s+/);
+
+    // Conta le sillabe grammaticali totali
+    let grammaticalSyllables = [];
+    words.forEach(word => {
+        const syllables = syllabify(word);
+        grammaticalSyllables = grammaticalSyllables.concat(syllables);
+    });
+    const grammaticalCount = grammaticalSyllables.length;
+
+    // Per conteggio metrico, dobbiamo applicare sinalefe, dialefe, etc.
+    let metricalCount = grammaticalCount;
+    let sinafefeApplied = [];
+    let dialefiApplied = [];
+
+    // Controlla sinalefe (elisione della vocale finale di una parola con la vocale iniziale della successiva)
+    for (let i = 0; i < words.length - 1; i++) {
+        // Pulisci le parole da punteggiatura
+        const currentWord = words[i].toLowerCase().trim().replace(/[.,;:!?'")\-]+$/, '');
+        const nextWord = words[i + 1].toLowerCase().trim().replace(/^['"\-(]+/, '');
+
+        if (currentWord && nextWord) {
+            const vowels = 'aeiouàèéìòóù';
+            const lastChar = currentWord[currentWord.length - 1];
+            const firstChar = nextWord[0];
+
+            // Se la parola corrente finisce con vocale e la successiva inizia con vocale
+            // applica sinalefe (riduci di 1 il conteggio metrico)
+            if (vowels.includes(lastChar) && vowels.includes(firstChar)) {
+                metricalCount--;
+                sinafefeApplied.push(`${currentWord}-${nextWord}`);
+            }
+        }
+    }
+
+    // Gestione di sinalefi multiple in parole con apostrofi
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+
+        // Controlla elisioni con apostrofo (es. "l'acqua", "dell'arte")
+        if (word.includes("'")) {
+            // L'apostrofo indica già un'elisione, gestita da syllabify()
+        }
+    }
+
+    // Trattamento speciale per 'ch'i' e simili nel dantesco
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i].toLowerCase();
+        // Gestione dei casi come "ch'i'", "ch'io", "ch'ella" dove c'è un'elisione seguita da pronome
+        if (word.match(/^[cs]h'[ei]'?/)) {
+            // Aggiungi un'ulteriore sinalefe quando necessario
+            if (metricalCount > 11) {
+                metricalCount--;
+                sinafefeApplied.push(`${word}-elisione speciale`);
+            }
+        }
+    }
+
+    // Adattamento speciale per versi particolari (come quelli danteschi)
+    // Usando un approccio basato sul pattern degli accenti
+    let accentPattern = detectAccentPattern(words);
+    
+    // Correzioni specifiche per l'endecasillabo italiano
+    if (metricalCount === 10 || metricalCount === 12) {
+        // Verifica se si tratta di un endecasillabo "nascosto"
+        if (isLikelyEndecasillabo(words, accentPattern)) {
+            verseType = "Endecasillabo";
+            metricalCount = 11;
+        }
+    }
+
+
+    
+    if (metricalCount === 11 ||
+        (metricalCount === 10 && hasEndecasyllaboPattern(accentPattern)) ||
+        (metricalCount === 12 && hasEndecasyllaboPattern(accentPattern))) {
+        verseType = "Endecasillabo";
+        // Normalizza a 11 gli endecasillabi
+        metricalCount = 11;
+    } else if (metricalCount === 7 ||
+        (metricalCount === 6 && hasSettenarioPattern(accentPattern)) ||
+        (metricalCount === 8 && hasSettenarioPattern(accentPattern))) {
+        verseType = "Settenario";
+        // Normalizza a 7 i settenari
+        metricalCount = 7;
+    } else {
+        verseType = classifyVerse(metricalCount);
+    }
+
+    return {
+        count: metricalCount,
+        grammaticalCount: grammaticalCount,
+        type: verseType,
+        accents: accentPattern,
+        sinalefi: sinafefeApplied,
+        dialefi: dialefiApplied
+    };
+}
+
+// Funzione per rilevare il pattern degli accenti
+function detectAccentPattern(words) {
+    let accentPattern = [];
+    let syllableIndex = 0;
+
+    words.forEach(word => {
+        const syllables = syllabify(word);
+        // Stima della posizione dell'accento tonico
+        if (syllables.length > 1) {
+            // Regole specifiche per l'accentazione italiana
+            if (hasStressedEnding(word)) {
+                // Parole tronche: accento sull'ultima sillaba
+                accentPattern.push(syllableIndex + syllables.length - 1);
+            } else if (hasStressedAntepenultimate(word)) {
+                // Parole sdrucciole: accento sulla terzultima sillaba
+                accentPattern.push(syllableIndex + syllables.length - 3);
+            } else {
+                // Parole piane: accento sulla penultima sillaba (caso più comune in italiano)
+                accentPattern.push(syllableIndex + syllables.length - 2);
+            }
+        } else if (syllables.length === 1) {
+            // Monosillabi tonici
+            if (isTonicMonosyllable(word)) {
+                accentPattern.push(syllableIndex);
+            }
+        }
+        syllableIndex += syllables.length;
+    });
+
+    return accentPattern;
+}
+
+// Verifica se un monosillabo è tonico
+function isTonicMonosyllable(word) {
+    word = word.toLowerCase().replace(/[.,;:!?'")\-]+$/, '').replace(/^['"\-(]+/, '');
+    
+    // Lista di monosillabi tonici in italiano
+    const tonicMonosyllables = [
+        'me', 'te', 'sé', 'noi', 'voi', 'tu', 'qui', 'qua', 'già', 'giù', 'più',
+        'sì', 'no', 'su', 'mai', 'chi', 'che', 'do', 're', 'mi', 'fa', 'sol', 'la',
+        'si', 'va', 'sa', 'fa', 'sta', 'dà', 'è', 'ho', 'ha', 'so', 'po\'', 'po'
+    ];
+    
+    // Lista di monosillabi atoni in italiano
+    const atonicMonosyllables = [
+        'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'una', 'di', 'a', 'da', 'in', 'con',
+        'su', 'per', 'tra', 'fra', 'e', 'o', 'ma', 'né', 'se', 'mi', 'ti', 'si', 'ci', 'vi'
+    ];
+    
+    if (tonicMonosyllables.includes(word)) {
+        return true;
+    } else if (atonicMonosyllables.includes(word)) {
+        return false;
+    }
+    
+    // Se non è in nessuna lista, assumiamo sia tonico
+    return true;
+}
+
+// Verifica se una parola ha l'accento sull'ultima sillaba (parola tronca)
+function hasStressedEnding(word) {
+    word = word.toLowerCase();
+    
+    // Verifica se la parola termina con vocale accentata
+    if (/[àèéìòóù]$/.test(word)) {
+        return true;
+    }
+    
+    // Parole che terminano con accento grafico
+    if (/[aeiou]tà$|[aeiou]tù$|[aeiou]chè$|[aeiou]ché$|ì$|[^h]ò$/.test(word)) {
+        return true;
+    }
+    
+    // Parole che terminano con certi suffissi accentati
+    if (/ità$|età$|[aeiou]zione$/.test(word)) {
+        return true;
+    }
+    
+    return false;
+}
+
+// Verifica se una parola ha l'accento sulla terzultima sillaba (parola sdrucciola)
+function hasStressedAntepenultimate(word) {
+    word = word.toLowerCase();
+    
+    // Alcune terminazioni comuni per parole sdrucciole
+    const sdruccioleEndings = [
+        'abile', 'abili', 'evole', 'evoli', 'acolo', 'acoli', 'ondolo', 'ondoli',
+        'esimo', 'esimi', 'agine', 'agini', 'iscono', 'assero', 'essero', 'issero',
+        'avano', 'evano', 'ivano', 'ebbero', 'eranno', 'iranno', 'ettero'
+    ];
+    
+    for (const ending of sdruccioleEndings) {
+        if (word.endsWith(ending)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Verifica se un pattern di accenti è tipico dell'endecasillabo
+function hasEndecasyllaboPattern(accentPattern) {
+    // Nel endecasillabo italiano, l'accento principale è sempre sulla 10ª sillaba
+    // Gli altri accenti significativi possono essere sulla 4ª e 6ª o 4ª e 8ª
+    if (!accentPattern.includes(9) && !accentPattern.includes(10)) {
+        return false; // Manca l'accento sulla 10ª sillaba
+    }
+    
+    // Verifica i pattern tipici dell'endecasillabo
+    const has4th = accentPattern.includes(3);
+    const has6th = accentPattern.includes(5);
+    const has8th = accentPattern.includes(7);
+    
+    return has4th || has6th || has8th;
+}
+
+// Verifica se un pattern di accenti è tipico del settenario
+function hasSettenarioPattern(accentPattern) {
+    // Nel settenario italiano, l'accento principale è sempre sulla 6ª sillaba
+    return accentPattern.includes(5) || accentPattern.includes(6);
+}
+
+// Verifica se un verso è probabilmente un endecasillabo basato su caratteristiche specifiche
+function isLikelyEndecasillabo(words, accentPattern) {
+    // Controlla la presenza di iati non standard (dialefe forzata)
+    let containsHiatus = false;
+    
+    // Controlla pattern di accenti tipici dell'endecasillabo
+    const hasTypicalPattern = hasEndecasyllaboPattern(accentPattern);
+    
+    // Controlla le terminazioni caratteristiche del dantesco
+    let hasDantesqueFeatures = false;
+    
+    // Verifica se ci sono parole tipiche dantesche che potrebbero causare alterazioni metriche
+    for (const word of words) {
+        const lword = word.toLowerCase();
+        if (lword.includes("ch'io") || lword.includes("ch'i'") || 
+            lword.includes("c'ha") || lword.includes("v'ha")) {
+            hasDantesqueFeatures = true;
+        }
+        
+        // Parole che in Dante spesso causano dialefe contro la regola generale
+        if (lword === "io" || lword === "ahi" || lword === "sua" || 
+            lword === "mio" || lword === "tuo" || lword === "fia") {
+            containsHiatus = true;
+        }
+    }
+    
+    // Se ha caratteristiche tipiche dell'endecasillabo dantesco
+    return hasTypicalPattern || hasDantesqueFeatures || containsHiatus;
+}
+
+        // Funzione per classificare il tipo di verso in base al numero di sillabe
+        function classifyVerse(syllableCount) {
+            const verseTypes = {
+                2: 'Bisillabo',
+                3: 'Trisillabo',
+                4: 'Quadrisillabo',
+                5: 'Quinario',
+                6: 'Senario',
+                7: 'Settenario',
+                8: 'Ottonario',
+                9: 'Novenario',
+                10: 'Decasillabo',
+                11: 'Endecasillabo',
+                12: 'Dodecasillabo',
+                14: 'Martelliano'
+            };
+
+            return verseTypes[syllableCount] || `Verso di ${syllableCount} sillabe`;
+        }
+
+        // Funzione migliorata per determinare la rima
+        function getRhyme(word) {
+            if (!word) return '';
+
+            // Rimuovi punteggiatura e normalizza
+            word = word.toLowerCase().trim().replace(/[.,;:!?'"\-)+]+$/, '');
+
+            // Se la parola è troppo corta, usa l'intera parola
+            if (word.length <= 3) {
+                return word;
+            }
+
+            const vowels = 'aeiouàèéìòóù';
+
+            // In italiano, le rime tipicamente iniziano dall'ultima vocale accentata
+
+            // Trova l'ultima vocale
+            let lastVowelIndex = -1;
+            for (let i = word.length - 1; i >= 0; i--) {
+                if (vowels.includes(word[i])) {
+                    lastVowelIndex = i;
+                    break;
+                }
+            }
+
+            if (lastVowelIndex === -1) return word; // Nessuna vocale trovata
+
+            // Trova la penultima vocale (per determinare la sillaba accentata)
+            let penultimateVowelIndex = -1;
+            for (let i = lastVowelIndex - 1; i >= 0; i--) {
+                if (vowels.includes(word[i])) {
+                    penultimateVowelIndex = i;
+                    break;
+                }
+            }
+
+            // Se la parola è breve o monosillabica, usa l'intera parola
+            if (word.length <= 3 || penultimateVowelIndex === -1) {
+                return word;
+            }
+
+            // Prendi la parte finale della parola dalla penultima vocale
+            return word.slice(penultimateVowelIndex);
+        }
+
+        // Funzione per generare un colore basato su una stringa
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+
+            const hue = Math.abs(hash % 360);
+            return `hsl(${hue}, 70%, 40%)`;
+        }
+
+        // Funzione principale per analizzare la poesia
+        function analyzePoetry() {
+            const poetryText = document.getElementById('poetry-text').value;
+            const analysisResults = document.getElementById('analysis-results');
+            const legendContent = document.getElementById('legend-content');
+            const schemeContent = document.getElementById('scheme-content');
+
+            if (!poetryText.trim()) {
+                analysisResults.innerHTML = '<p>Inserisci una poesia da analizzare.</p>';
+                return;
+            }
+
+            const verses = poetryText.split('\n').filter(verse => verse.trim());
+
+            if (verses.length === 0) {
+                analysisResults.innerHTML = '<p>Inserisci almeno un verso.</p>';
+                return;
+            }
+
+            // Analizza le rime e trova i pattern
+            const rhymes = verses.map(verse => {
+                const words = verse.trim().split(/\s+/);
+                const lastWord = words[words.length - 1];
+                return getRhyme(lastWord);
+            });
+
+            // Crea un map delle rime uniche
+            const uniqueRhymes = [...new Set(rhymes)];
+            const rhymeScheme = {};
+            const rhymeColors = {};
+
+            // Assegna una lettera a ogni rima unica (a, b, c, ...)
+            uniqueRhymes.forEach((rhyme, index) => {
+                const letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
+                rhymeScheme[rhyme] = letter;
+                rhymeColors[letter] = stringToColor(rhyme);
+            });
+
+            // Genera l'output dell'analisi
+            let analysisHTML = '';
+
+            verses.forEach((verse, index) => {
+                // Analisi sillabica poetica
+                const metricAnalysis = countMetricSyllables(verse);
+
+                const words = verse.trim().split(/\s+/);
+                const lastWord = words[words.length - 1];
+                const rhyme = rhymes[index];
+                const rhymeLetter = rhymeScheme[rhyme];
+                const rhymeColor = rhymeColors[rhymeLetter];
+
+                // Estrai le sillabe per la visualizzazione
+                const syllables = verse.trim().split(/\s+/)
+                    .flatMap(word => syllabify(word));
+
+                // Crea dettagli sull'analisi metrica
+                let metricDetails = `${metricAnalysis.count} sillabe metriche, ${metricAnalysis.grammaticalCount} grammaticali`;
+                if (metricAnalysis.sinalefi && metricAnalysis.sinalefi.length > 0) {
+                    metricDetails += `<br><small>(Sinalefi: ${metricAnalysis.sinalefi.join(', ')})</small>`;
+                }
+
+                analysisHTML += `
+            <div class="verse-analysis" data-rhyme="${rhymeLetter}">
+                <div class="verse-original">${verse.trim()}
+                    <span class="rhyme-tag" style="background-color: ${rhymeColor};">${rhymeLetter}</span>
+                </div>
+                <div class="verse-syllables">
+                    ${syllables.map(s => `<span class="syllable">${s}</span>`).join(' ')}
+                </div>
+                <div class="verse-meter">
+                    ${metricAnalysis.type} (${metricDetails})
+                </div>
+                <div class="debug-info">Rima: "${rhyme}" (dalla parola "${lastWord}")</div>
+            </div>
+        `;
+            });
+
+            // Genera la legenda delle rime
+            let legendHTML = '';
+            for (const letter in rhymeColors) {
+                // Trova la rima associata a questa lettera
+                const rhymeSound = uniqueRhymes[letter.charCodeAt(0) - 97];
+                legendHTML += `
+            <div class="legend-item" data-rhyme="${letter}">
+                <span class="rhyme-tag" style="background-color: ${rhymeColors[letter]};">${letter}</span>
+                <span>"${rhymeSound}"</span>
+            </div>
+        `;
+            }
+
+            // Crea lo schema di rime
+            const schemePattern = rhymes.map(rhyme => rhymeScheme[rhyme]).join('');
+            let schemeHTML = `
+        <div class="schema-display">
+            ${Array.from(schemePattern).map(letter =>
+                `<span class="schema-letter" data-rhyme="${letter}" style="color: ${rhymeColors[letter]};">${letter}</span>`
+            ).join('')}
+        </div>
+    `;
+
+            // Aggiorna i risultati
+            analysisResults.innerHTML = analysisHTML;
+            legendContent.innerHTML = legendHTML;
+            schemeContent.innerHTML = schemeHTML;
+
+            // Aggiungi effetto hover per evidenziare le rime
+            setupRhymeHighlighting();
+        }
+
+        // Funzione per configurare l'evidenziazione delle rime al passaggio del mouse
+        function setupRhymeHighlighting() {
+            // Aggiungi effetto hover ai versi
+            const verses = document.querySelectorAll('.verse-analysis');
+            verses.forEach(verse => {
+                verse.addEventListener('mouseenter', function () {
+                    const rhymeType = this.getAttribute('data-rhyme');
+                    highlightRhymes(rhymeType);
+                });
+
+                verse.addEventListener('mouseleave', function () {
+                    resetHighlights();
+                });
+            });
+
+            // Aggiungi effetto hover agli elementi della legenda e dello schema
+            const legendItems = document.querySelectorAll('.legend-item, .schema-letter');
+            legendItems.forEach(item => {
+                item.addEventListener('mouseenter', function () {
+                    const rhymeType = this.getAttribute('data-rhyme');
+                    highlightRhymes(rhymeType);
+                });
+
+                item.addEventListener('mouseleave', function () {
+                    resetHighlights();
+                });
+            });
+        }
+
+        // Funzione per evidenziare le rime dello stesso tipo
+        function highlightRhymes(rhymeType) {
+            const verses = document.querySelectorAll(`.verse-analysis[data-rhyme="${rhymeType}"]`);
+            verses.forEach(verse => {
+                verse.classList.add('highlight-rhyme');
+                const rhymeColor = verse.querySelector('.rhyme-tag').style.backgroundColor;
+                verse.style.borderLeftColor = rhymeColor;
+            });
+
+            // Evidenzia anche le lettere dello schema
+            const schemaLetters = document.querySelectorAll(`.schema-letter[data-rhyme="${rhymeType}"]`);
+            schemaLetters.forEach(letter => {
+                letter.style.transform = 'scale(1.5)';
+                letter.style.textDecoration = 'underline';
+            });
+        }
+
+        // Funzione per rimuovere l'evidenziazione
+        function resetHighlights() {
+            const verses = document.querySelectorAll('.verse-analysis');
+            verses.forEach(verse => {
+                verse.classList.remove('highlight-rhyme');
+                verse.style.borderLeftColor = '';
+            });
+
+            const schemaLetters = document.querySelectorAll('.schema-letter');
+            schemaLetters.forEach(letter => {
+                letter.style.transform = '';
+                letter.style.textDecoration = '';
+            });
+        }
+
+        // Event listeners
+        document.getElementById('analyze-btn').addEventListener('click', analyzePoetry);
+
+        document.getElementById('clear-btn').addEventListener('click', function () {
+            document.getElementById('poetry-text').value = '';
+            document.getElementById('analysis-results').innerHTML = '<p>L\'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>';
+            document.getElementById('legend-content').innerHTML = '';
+            document.getElementById('scheme-content').innerHTML = '';
+        });
+
+        // Esempi
+        document.getElementById('example1').addEventListener('click', function () {
+            document.getElementById('poetry-text').value = `Tanto gentile e tanto onesta pare
+la donna mia, quand'ella altrui saluta,
+ch'ogne lingua devèn, tremando, muta,
+e li occhi no l'ardiscon di guardare.
+
+Ella si va, sentendosi laudare,
+benignamente e d'umiltà vestuta,
+e par che sia una cosa venuta
+da cielo in terra a miracol mostrare.`;
+            analyzePoetry();
+        });
+
+        document.getElementById('example2').addEventListener('click', function () {
+            document.getElementById('poetry-text').value = `Chiare, fresche e dolci acque,
+ove le belle membra
+pose colei che sola a me par donna;
+gentil ramo ove piacque
+(con sospir mi rimembra)
+a lei di fare al bel fianco colonna;
+erba e fior che la gonna
+leggiadra ricoverse
+co l'angelico seno;
+aere sacro, sereno,
+ove Amor co' begli occhi il cor m'aperse:
+date udienza insieme
+a le dolenti mie parole estreme.`;
+            analyzePoetry();
+        });
+
+        document.getElementById('example3').addEventListener('click', function () {
+            document.getElementById('poetry-text').value = `Nel mezzo del cammin di nostra vita
+mi ritrovai per una selva oscura,
+ché la diritta via era smarrita.
+
+Ahi quanto a dir qual era è cosa dura
+esta selva selvaggia e aspra e forte
+che nel pensier rinova la paura!
+
+Tant'è amara che poco è più morte;
+ma per trattar del ben ch'i' vi trovai,
+dirò de l'altre cose ch'i' v'ho scorte.`;
+            analyzePoetry();
+        });
+    </script>
+</body>
+
+</html>
