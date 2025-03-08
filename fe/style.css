@@ -1,0 +1,235 @@
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Playfair Display', serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f5f1;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #5d4037;
+    font-style: italic;
+}
+
+.description {
+    text-align: center;
+    margin-bottom: 30px;
+    font-style: italic;
+    color: #6d6d6d;
+}
+
+.poetry-container {
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.poetry-input {
+    flex: 1;
+    padding: 15px;
+}
+
+.poetry-analysis {
+    flex: 1;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+textarea {
+    width: 100%;
+    height: 300px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    resize: none;
+}
+
+button {
+    background-color: #5d4037;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #8d6e63;
+}
+
+.verse-analysis {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-left: 3px solid #ddd;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.verse-original {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.verse-syllables {
+    color: #6d6d6d;
+    font-size: 14px;
+}
+
+.syllable {
+    display: inline-block;
+    padding: 2px 5px;
+    margin: 0 2px;
+    background-color: #efe1d1;
+    border-radius: 3px;
+}
+
+.rhyme-tag {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.example-button {
+    background-color: #8d6e63;
+    margin-right: 10px;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.examples {
+    margin-bottom: 20px;
+}
+
+.analysis-footer {
+    display: flex;
+    margin-top: 20px;
+}
+
+.rhyme-legend {
+    flex: 1;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.rhyme-scheme {
+    flex: 1;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-left: 15px;
+}
+
+.rhyme-legend h3,
+.rhyme-scheme h3 {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.legend-item {
+    display: inline-block;
+    margin-right: 15px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.legend-item:hover {
+    transform: scale(1.1);
+}
+
+.schema-display {
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.schema-letter {
+    display: inline-block;
+    padding: 2px 5px;
+    margin: 0 3px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.schema-letter:hover {
+    transform: scale(1.2);
+}
+
+/* Stile per l'effetto hover delle rime */
+.highlight-rhyme {
+    background-color: rgba(253, 245, 230, 0.8);
+    border-left: 3px solid;
+    transform: translateX(5px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.debug-info {
+    font-size: 12px;
+    color: #999;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+.verse-meter {
+    font-size: 14px;
+    color: #5d4037;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+    .poetry-container {
+        flex-direction: column;
+    }
+
+    .poetry-input,
+    .poetry-analysis {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .analysis-footer {
+        flex-direction: column;
+    }
+
+    .rhyme-scheme {
+        margin-left: 0;
+        margin-top: 15px;
+    }
+}

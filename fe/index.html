@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poet - Analizzatore di Poesie</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+        @import url('style.css');
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Poet <i class="fas fa-feather-alt"></i></h1>
+        <p class="description">Analizza la tua poesia, scopri la struttura sillabica e lo schema delle rime</p>
+
+        <div class="examples">
+            <button id="example1" class="example-button">Esempio: Sonetto</button>
+            <button id="example2" class="example-button">Esempio: Canzone</button>
+            <button id="example3" class="example-button">Esempio: Endecasillabi</button>
+        </div>
+
+        <div class="controls">
+            <button id="analyze-btn"><i class="fas fa-magic"></i> Analizza</button>
+            <button id="clear-btn"><i class="fas fa-trash"></i> Cancella</button>
+        </div>
+
+        <div class="poetry-container">
+            <div class="poetry-input">
+                <textarea id="poetry-text" placeholder="Inserisci qui la tua poesia..."></textarea>
+            </div>
+            <div class="poetry-analysis" id="analysis-results">
+                <p>L'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>
+            </div>
+        </div>
+
+        <div class="analysis-footer">
+            <div class="rhyme-legend" id="rhyme-legend">
+                <h3>Legenda delle Rime:</h3>
+                <div id="legend-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="rhyme-scheme" id="rhyme-scheme">
+                <h3>Schema delle Rime:</h3>
+                <div id="scheme-content">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="syllabes.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>
