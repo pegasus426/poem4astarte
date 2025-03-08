@@ -233,3 +233,125 @@ button:hover {
         margin-top: 15px;
     }
 }
+
+/* Aggiungi questi stili al file style.css */
+
+/* Stili per le sillabe con gruppi vocalici */
+.syllable {
+    display: inline-block;
+    padding: 2px 5px;
+    margin: 0 2px;
+    background-color: #efe1d1;
+    border-radius: 3px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.syllable-diphthong {
+    background-color: #e3f2fd;
+    border: 1px solid #bbdefb;
+}
+
+.syllable-triphthong {
+    background-color: #e8f5e9;
+    border: 1px solid #c8e6c9;
+}
+
+.syllable-hiatus {
+    background-color: #fff3e0;
+    border: 1px solid #ffe0b2;
+}
+
+.vowel-group-highlight {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.vowel-tag {
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.diphthong-tag {
+    background-color: #1e88e5;
+}
+
+.triphthong-tag {
+    background-color: #43a047;
+}
+
+.hiatus-tag {
+    background-color: #ff9800;
+}
+
+.highlight-vowel-group {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+/* Legenda delle strutture vocaliche */
+.vowel-legend {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.vowel-legend h3 {
+    margin-bottom: 10px;
+    color: #5d4037;
+}
+
+.vowel-explanation {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.vowel-explanation .vowel-tag {
+    position: static;
+    margin-right: 10px;
+    box-shadow: none;
+}
+
+.vowel-statistics {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.vowel-stat {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.vowel-stat .vowel-tag {
+    position: static;
+    margin-right: 10px;
+    box-shadow: none;
+}
+
+@media (max-width: 768px) {
+    .vowel-explanation {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .vowel-explanation .vowel-tag {
+        margin-bottom: 5px;
+    }
+}

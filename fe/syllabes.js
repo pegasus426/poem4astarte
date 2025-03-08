@@ -374,7 +374,7 @@ function countMetricSyllables(verse) {
         type: verseType,
         accents: accentPattern,
         sinalefi: sinalefiApplied,
-        dialefi: dialefiApplied
+        dialefi: dialefiApplied,
     };
 }
 // Verifica se un monosillabo è tonico
@@ -450,4 +450,108 @@ function isLikelyEndecasillabo(words, accentPattern) {
         }
     }
     return hasEndecasyllaboPattern(accentPattern) || hasDantesqueFeatures || containsHiatus;
+}
+
+
+// Aggiungere queste funzioni al file syllabes.js
+
+// Funzione per identificare dittonghi, trittonghi e iati in una sillaba
+function identifyVowelGroups(syllable) {
+    syllable = syllable.toLowerCase();
+    
+    // Definizione delle strutture vocaliche
+    const diphthongs = ['ia', 'ie', 'io', 'iu', 'ai', 'ei', 'oi', 'ui', 'au', 'eu'];
+    const hiatus = ['ìa', 'ìe', 'ìo', 'ùi', 'ùe', 'ùo', 'àe', 'èa', 'èo', 'òe', 'aé', 'aò', 'eà', 'eò', 'oa', 'oe', 'ea', 'oa', 'ua'];
+    const triphthongs = ['iai', 'iei', 'uai', 'uei', 'uoi'];
+    
+    // Verifica se contiene un trittongo
+    for (const tri of triphthongs) {
+        if (syllable.includes(tri)) {
+            return { type: 'triphthong', sequence: tri };
+        }
+    }
+    
+    // Verifica se contiene un dittongo
+    for (const di of diphthongs) {
+        if (syllable.includes(di)) {
+            // Verifica che non sia parte di un iato
+            let isPartOfHiatus = false;
+            for (const hi of hiatus) {
+                if (syllable.includes(hi) && hi.includes(di)) {
+                    isPartOfHiatus = true;
+                    break;
+                }
+            }
+            if (!isPartOfHiatus) {
+                return { type: 'diphthong', sequence: di };
+            }
+        }
+    }
+    
+    // Verifica se contiene un iato
+    for (const hi of hiatus) {
+        if (syllable.includes(hi)) {
+            return { type: 'hiatus', sequence: hi };
+        }
+    }
+    
+    return { type: 'normal', sequence: '' };
+}
+
+// Modifica la funzione syllabify per esportare informazioni sui gruppi vocalici
+function syllabifyWithVowelGroups(word) {
+    const syllables = syllabify(word);
+    
+    // Arricchisci le sillabe con informazioni sui gruppi vocalici
+    return syllables.map(syll => {
+        const vowelGroup = identifyVowelGroups(syll);
+        return {
+            text: syll,
+            vowelGroup: vowelGroup
+        };
+    });
+}
+
+// Aggiungi questa funzione per generare HTML avanzato delle sillabe
+function generateSyllablesHTML(syllableObjects) {
+    return syllableObjects.map(syllObj => {
+        const { text, vowelGroup } = syllObj;
+        
+        let html = '';
+        
+        if (vowelGroup.type !== 'normal' && vowelGroup.sequence) {
+            // Evidenzia il gruppo vocalico nella sillaba
+            const highlightedText = text.replace(
+                vowelGroup.sequence, 
+                `<span class="vowel-group-highlight">${vowelGroup.sequence}</span>`
+            );
+            
+            let tagClass = 'vowel-tag';
+            let tagText = '';
+            
+            switch(vowelGroup.type) {
+                case 'diphthong':
+                    tagClass += ' diphthong-tag';
+                    tagText = 'D';
+                    break;
+                case 'triphthong':
+                    tagClass += ' triphthong-tag';
+                    tagText = 'T';
+                    break;
+                case 'hiatus':
+                    tagClass += ' hiatus-tag';
+                    tagText = 'I';
+                    break;
+            }
+            
+            html = `<span class="syllable syllable-${vowelGroup.type}" title="${vowelGroup.type}: ${vowelGroup.sequence}">
+                ${highlightedText}
+                <span class="${tagClass}">${tagText}</span>
+            </span>`;
+        } else {
+            html = `<span class="syllable">${text}</span>`;
+        }
+        
+        return html;
+    }).join(' ');
 }
