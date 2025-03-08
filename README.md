@@ -18,4 +18,5 @@ poetry run uvicorn src.main:app --reload
 
 ## Frontend
 cd fe
+open in browser index.html
 
