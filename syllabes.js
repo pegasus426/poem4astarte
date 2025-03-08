@@ -172,13 +172,13 @@ function countMetricSyllables(verse) {
 
 
 
-    // Adattamento specifico per endecasillabi (ad esempio, versi danteschi)
+    /* Adattamento specifico per endecasillabi (ad esempio, versi danteschi)
     if (metricalCount === 10 || metricalCount === 12) {
         if (isLikelyEndecasillabo(words, accentPattern)) {
             verseType = "Endecasillabo";
             metricalCount = 11;
         }
-    }
+    }*/
 
     if (metricalCount === 11 ||
        (metricalCount === 10 && hasEndecasyllaboPattern(accentPattern)) ||
@@ -286,7 +286,7 @@ function _hasEndecasyllaboPattern(accentPattern, totalSyllables) {
 
 // Improved function to detect endecasillabo patterns based on rhythmic principles
 function hasEndecasyllaboPattern(accentPattern, totalSyllables) {
-    const {hasPattern} = _hasEndecasyllaboPattern(accentPattern, totalSyllories)
+    const {hasPattern} = _hasEndecasyllaboPattern(accentPattern, totalSyllables)
     return hasPattern;
 }
 
@@ -391,6 +391,7 @@ function countMetricSyllables(verse) {
         accents: accentPattern,
         sinalefi: sinalefiApplied,
         dialefi: dialefiApplied,
+        endecasillaboPatternType: _hasEndecasyllaboPattern(accentPattern, grammaticalCount),
     };
 }
 // Verifica se un monosillabo è tonico
@@ -530,16 +531,41 @@ function syllabifyWithVowelGroups(word) {
     });
 }
 
+function getAccenti(text,accentPattern,index){
+    let extraclass = '';
+            if (accentPattern.includes(index+1)) {
+                extraclass ='accented';
+                //replace vocali con vocali accentate in text a livello unicode con il corrispettivo carattere accentato
+                text = text.replace(/[a]/gi, (match) => {
+                    return 'à';
+                });
+                text = text.replace(/[e]/gi, (match) => {
+                    return 'è';
+                });
+                text = text.replace(/[i]/gi, (match) => {
+                    return 'ì';
+                });
+                text = text.replace(/[o]/gi, (match) => {
+                    return 'ò';
+                });
+                text = text.replace(/[u]/gi, (match) => {
+                    return 'ù';
+                });
+            }
+            return {text,extraclass};
+}
+
 // Aggiungi questa funzione per generare HTML avanzato delle sillabe
-function generateSyllablesHTML(syllableObjects) {
-    return syllableObjects.map(syllObj => {
-        const { text, vowelGroup } = syllObj;
-        
+function generateSyllablesHTML(syllableObjects, metricAnalysis) {
+    //console.log(syllableObjects);
+    const accentPattern = metricAnalysis.accents;
+    return syllableObjects.map((syllObj) => {
+        let { text, vowelGroup } = syllObj;
         let html = '';
         
         if (vowelGroup.type !== 'normal' && vowelGroup.sequence) {
             // Evidenzia il gruppo vocalico nella sillaba
-            const highlightedText = text.replace(
+            let highlightedText = text.replace(
                 vowelGroup.sequence, 
                 `<span class="vowel-group-highlight">${vowelGroup.sequence}</span>`
             );
@@ -561,15 +587,21 @@ function generateSyllablesHTML(syllableObjects) {
                     tagText = 'I';
                     break;
             }
+
+     
             
-            html = `<span class="syllable syllable-${vowelGroup.type}" title="${vowelGroup.type}: ${vowelGroup.sequence}">
+       
+            const accinfo = getAccenti(highlightedText, accentPattern,  window.syllabeTmpCount++);
+            highlightedText = accinfo.text;
+            html = `<span class="syllable ${accinfo.extraclass} syllable-${vowelGroup.type}" title="${vowelGroup.type}: ${vowelGroup.sequence}">
                 ${highlightedText}
                 <span class="${tagClass}">${tagText}</span>
             </span>`;
         } else {
-            html = `<span class="syllable">${text}</span>`;
+            const accinfo = getAccenti(text, accentPattern,  window.syllabeTmpCount++);
+            text = accinfo.text;     
+            html = `<span class="syllable ${accinfo.extraclass}">${text}</span>`;
         }
-        
         return html;
     }).join(' ');
 }

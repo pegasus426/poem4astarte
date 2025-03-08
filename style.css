@@ -84,6 +84,7 @@ button:hover {
 }
 
 .verse-analysis {
+    position: relative;
     margin-bottom: 15px;
     padding: 10px;
     border-left: 3px solid #ddd;
@@ -246,6 +247,10 @@ button:hover {
     position: relative;
     transition: all 0.3s ease;
 }
+.syllable.accented{
+    background-color: #f8bbd0;
+    border: 1px solid #e1bee7;
+}
 
 .syllable-diphthong {
     background-color: #e3f2fd;
@@ -265,6 +270,23 @@ button:hover {
 .vowel-group-highlight {
     font-weight: bold;
     text-decoration: underline;
+}
+
+.endecasillabo-tag {
+    background: goldenrod;
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .vowel-tag {

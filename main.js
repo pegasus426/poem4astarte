@@ -102,6 +102,9 @@ function analyzePoetry() {
     let triphthongCount = 0;
     let hiatusCount = 0;
 
+    let tagClass = '';
+    let tagText = '';
+
     verses.forEach((verse, index) => {
         // Analisi sillabica poetica
         const metricAnalysis = countMetricSyllables(verse);
@@ -130,11 +133,40 @@ function analyzePoetry() {
             metricDetails += `<br><small>(Sinalefi: ${metricAnalysis.sinalefi.join(', ')})</small>`;
         }
 
+        if (metricAnalysis.dialefi && metricAnalysis.dialefi.length > 0) {
+            metricDetails += `<br><small>(Dialefi: ${metricAnalysis.dialefi.join(', ')})</small>`;
+        }
+
+        metricDetails += `<br><small>(Pattern accenti: ${metricAnalysis.accents})</small>`;
+
+        const endecasillaboPatternType = metricAnalysis.endecasillaboPatternType;
+        if (endecasillaboPatternType.hasAMaiorePattern) {
+            //console.log('endecasillaboMPatternType', endecasillaboPatternType);
+            tagClass += 'endecasillabo-tag endecasillabo-maiore-tag';
+            tagText = 'M';
+        }
+        if (endecasillaboPatternType.hasMinorePattern) {
+            //console.log('endecasillabomPatternType', endecasillaboPatternType);
+            tagClass += 'endecasillabo-tag endecasillabo-minore-tag';
+            tagText = 'm';
+        }
+
+        console.log('tt',tagClass, tagText,metricAnalysis, endecasillaboPatternType,verse.trim());
+        if (tagText!='') {
+            console.log('ttok',tagClass, tagText,endecasillaboPatternType,metricAnalysis);
+
+        }
+
+        window.syllabeTmpCount = 0;
         // Visualizzazione avanzata delle sillabe
         const syllablesHTML = syllableData.map(wordSyllables => {
-            return generateSyllablesHTML(wordSyllables);
+            return generateSyllablesHTML(wordSyllables, metricAnalysis);
         }).join(' ');
 
+      
+        let specialTagHTML = `<span class='${tagClass}'>${tagText}</span>`;
+
+        //console.log(specialTagHTML);
         analysisHTML += `
         <div class="verse-analysis" data-rhyme="${rhymeLetter}">
             <div class="verse-original">${verse.trim()}
@@ -147,8 +179,10 @@ function analyzePoetry() {
                 ${metricAnalysis.type} (${metricDetails})
             </div>
             <div class="debug-info">Rima: "${rhyme}" (dalla parola "${lastWord}")</div>
+            ${specialTagHTML}    
         </div>
     `;
+    //console.log(specialTagHTML);
     });
 
     // Genera la legenda delle rime
@@ -291,9 +325,9 @@ function resetHighlights() {
 
 loadPoem();
 // Event listeners
-document.getElementById('download-btn').addEventListener('click', function(e) {
+document.getElementById('download-btn').addEventListener('click', function (e) {
     const poem = document.getElementById('poetry-text').value;
-    const blob = new Blob([poem], {type: 'text/plain;charset=utf-8'});
+    const blob = new Blob([poem], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
