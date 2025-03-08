@@ -445,7 +445,8 @@ function classifyVerse(syllableCount) {
 
 // Funzione per determinare se un verso è probabilmente un endecasillabo
 function isLikelyEndecasillabo(words, accentPattern) {
-    let containsHiatus = false;
+    return false;
+    /*let containsHiatus = false;
     let hasDantesqueFeatures = false;
     for (const word of words) {
         const lword = word.toLowerCase();
@@ -457,6 +458,7 @@ function isLikelyEndecasillabo(words, accentPattern) {
         }
     }
     return hasEndecasyllaboPattern(accentPattern) || hasDantesqueFeatures || containsHiatus;
+*/
 }
 
 
