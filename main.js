@@ -89,10 +89,10 @@ function analyzePoetry() {
 
     // Assegna una lettera a ogni rima unica (a, b, c, ...)
     uniqueRhymes.forEach((rhyme, index) => {
-        const letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
+        let letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
         if (letter > 'z'){
             // Se il numero di rime uniche è superiore a 26, si assume che siamo in una nuova lettera
-            letter = String.fromCharCode(97 + (index % 26)); // 97 è il codice ASCII per 'a'
+            letter = 'a'+String.fromCharCode(97 - 26 + index)
         }
         rhymeScheme[rhyme] = letter;
         rhymeColors[letter] = stringToColor(rhyme);
