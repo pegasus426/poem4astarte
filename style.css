@@ -180,6 +180,8 @@ button:hover {
     font-weight: bold;
 }
 
+
+
 .schema-letter {
     display: inline-block;
     padding: 2px 5px;
@@ -191,6 +193,11 @@ button:hover {
 .schema-letter:hover {
     transform: scale(1.2);
 }
+
+.schema-letter.terzina {
+    margin-left: 16px;
+}
+
 
 /* Stile per l'effetto hover delle rime */
 .highlight-rhyme {

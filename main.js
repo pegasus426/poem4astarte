@@ -6,7 +6,7 @@ function getRhyme(word) {
     word = word.toLowerCase().trim().replace(/[.,;:!?'"\-)+]+$/, '');
 
     // Se la parola è troppo corta, usa l'intera parola
-    if (word.length <= 3) {
+    if (word.length <= 2) {
         return word;
     }
 
@@ -35,8 +35,9 @@ function getRhyme(word) {
     }
 
     // Se la parola è breve o monosillabica, usa l'intera parola
-    if (word.length <= 3 || penultimateVowelIndex === -1) {
-        return word;
+    if (word.length <= 2 || penultimateVowelIndex === -1) {
+        penultimateVowelIndex = lastVowelIndex;
+        //return word;
     }
 
     // Prendi la parte finale della parola dalla penultima vocale
@@ -202,8 +203,8 @@ function analyzePoetry() {
     const schemePattern = rhymes.map(rhyme => rhymeScheme[rhyme]).join('');
     let schemeHTML = `
     <div class="schema-display">
-        ${Array.from(schemePattern).map(letter =>
-        `<span class="schema-letter" data-rhyme="${letter}" style="color: ${rhymeColors[letter]};">${letter}</span>`
+        ${Array.from(schemePattern).map((letter, index) =>
+        `<span class="${(index % 3 === 0) ? "terzina " : ""}schema-letter" data-rhyme="${letter}" style="color: ${rhymeColors[letter]};">${letter}</span>`
     ).join('')}
     </div>
 `;
