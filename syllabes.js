@@ -194,7 +194,7 @@ function countMetricSyllables(verse) {
         verseType = classifyVerse(metricalCount);
     }
 
-    if (metricalCount + grammaticalCount> 22){
+    if ((metricalCount + grammaticalCount ) > 22){
         verseType = "Libero";
         metricalCount = grammaticalCount;
     }
