@@ -89,11 +89,7 @@ function analyzePoetry() {
 
     // Assegna una lettera a ogni rima unica (a, b, c, ...)
     uniqueRhymes.forEach((rhyme, index) => {
-        let letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
-        if (letter > 'z'){
-            // Se il numero di rime uniche è superiore a 26, si assume che siamo in una nuova lettera
-            letter = 'a'+String.fromCharCode(97 - 26 + index)
-        }
+        const letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
         rhymeScheme[rhyme] = letter;
         rhymeColors[letter] = stringToColor(rhyme);
     });
@@ -306,7 +302,7 @@ document.getElementById('poetry-text').addEventListener('keyup', function (event
 document.getElementById('poetry-text').addEventListener('paste', function () {
     const poem = document.getElementById('poetry-text').value;
     analyzePoetry();
-   // savePoem(poem);
+    savePoem(poem);
 });
 function savePoem(poem) {
     localStorage.setItem('poem', poem);
