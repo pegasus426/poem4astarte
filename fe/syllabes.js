@@ -32,10 +32,10 @@ function syllabify(word) {
     let i = 0;
 
     while (i < word.length) {
-        // Se siamo all'inizio di un possibile gruppo che non va diviso, gestiscilo
-        if (i === 0 && word.startsWith("qu")) {
-            // "qu" va considerato come un'unica unità
-            currentSyllable += word.substr(i, 2);
+        // Gestione dei gruppi come "qu": se troviamo "qu" in posizione iniziale o altrimenti,
+        // consideralo inseparabile
+        if (i + 1 < word.length && word.substr(i, 2) === "qu") {
+            currentSyllable += "qu";
             i += 2;
             continue;
         }
@@ -54,16 +54,16 @@ function syllabify(word) {
         if (i + 1 < word.length) {
             const pair = word.substr(i, 2);
             if (diphthongs.includes(pair)) {
-                // Se è un dittongo, aggiungi entrambi e salta
+                // Se è un dittongo, aggiungi entrambe le lettere e salta
                 currentSyllable += pair;
                 i += 2;
                 continue;
             } else if (hiatus.includes(pair)) {
-                // Se è un iato, termina la sillaba corrente e riparte
-                currentSyllable += word[i]; // aggiunge la vocale corrente
+                // Se è un iato, chiudi la sillaba corrente e riparti con la vocale successiva
+                currentSyllable += word[i];
                 syllables.push(currentSyllable);
                 currentSyllable = "";
-                i++; // la vocale successiva inizia la nuova sillaba
+                i++; // la vocale successiva inizierà la nuova sillaba
                 continue;
             }
         }
@@ -71,14 +71,14 @@ function syllabify(word) {
         // Aggiungi il carattere corrente
         currentSyllable += word[i];
 
-        // Se il carattere corrente è vocale, valuta se è il momento di dividere la sillaba
+        // Se il carattere corrente è vocale (e non è l'ultima lettera), valuta se dividere la sillaba
         if (vowels.includes(word[i]) && i < word.length - 1) {
-            // Se la lettera successiva è vocale, allora dividi (salvo casi particolari già gestiti)
+            // Se la lettera successiva è vocale, allora dividi (salvo casi già gestiti)
             if (vowels.includes(word[i + 1])) {
                 syllables.push(currentSyllable);
                 currentSyllable = "";
             } else {
-                // Se la lettera successiva è consonante, controlla il contesto
+                // Se la lettera successiva è una consonante, controlla il contesto
                 if (i + 2 < word.length && !vowels.includes(word[i + 1]) && !vowels.includes(word[i + 2])) {
                     // Se c'è un gruppo di due consonanti, controlla se formano cluster inseparabili
                     const cluster = word.substr(i + 1, 2);
@@ -88,7 +88,7 @@ function syllabify(word) {
                     } else {
                         // Altrimenti, la prima consonante si lega alla vocale corrente
                         syllables.push(currentSyllable + word[i + 1]);
-                        i++; // salto la consonante già associata
+                        i++; // salta la consonante già associata
                         currentSyllable = "";
                     }
                 } else if (i + 1 < word.length - 1) {
@@ -98,7 +98,6 @@ function syllabify(word) {
                 }
             }
         }
-
         i++;
     }
 
@@ -120,28 +119,30 @@ function countMetricSyllables(verse) {
     });
     const grammaticalCount = grammaticalSyllables.length;
 
-    // Inizialmente il conteggio metrico è uguale a quello grammaticale
+    // Inizialmente il conteggio metrico coincide con quello grammaticale
     let metricalCount = grammaticalCount;
     let sinalefiApplied = [];
     let dialefiApplied = [];
 
-    // Applica la sinalefe: se una parola termina in vocale e la successiva inizia con vocale, unisci
+    // Applica la sinalefe a livello di sillaba: se l'ultima sillaba della parola corrente termina con una vocale
+    // e la prima sillaba della parola successiva inizia con una vocale, riduci il conteggio metrico.
     for (let i = 0; i < words.length - 1; i++) {
-        const currentWord = words[i].toLowerCase().replace(/[.,;:!?'")\-]+$/, '');
-        const nextWord = words[i + 1].toLowerCase().replace(/^['"\-(]+/, '');
-        if (currentWord && nextWord) {
-            const vowels = 'aeiouàèéìòóù';
-            const lastChar = currentWord[currentWord.length - 1];
-            const firstChar = nextWord[0];
-            if (vowels.includes(lastChar) && vowels.includes(firstChar)) {
+        let currentWordClean = words[i].toLowerCase().replace(/[.,;:!?'")\-]+$/, '');
+        let nextWordClean = words[i + 1].toLowerCase().replace(/^['"\-(]+/, '');
+        let syllCurrent = syllabify(currentWordClean);
+        let syllNext = syllabify(nextWordClean);
+        if (syllCurrent.length > 0 && syllNext.length > 0) {
+            let lastSyl = syllCurrent[syllCurrent.length - 1];
+            let firstSyl = syllNext[0];
+            // Se l'ultima sillaba termina con vocale e la prima sillaba inizia con vocale, applica sinalefe
+            if (/[aeiouàèéìòóù]$/.test(lastSyl) && /^[aeiouàèéìòóù]/.test(firstSyl)) {
                 metricalCount--;
-                sinalefiApplied.push(`${currentWord}-${nextWord}`);
+                sinalefiApplied.push(`${currentWordClean}-${nextWordClean}`);
             }
         }
     }
 
-    // Eventuali gestioni speciali per elisioni con apostrofi o casi danteschi possono essere aggiunte qui
-    // (es. "ch'i'", "ch'io", ecc.)
+    // Eventuali gestioni speciali per apostrofi/elisioni (es. "ch'i'", "ch'io") nel contesto dantesco
     for (let i = 0; i < words.length; i++) {
         const word = words[i].toLowerCase();
         if (word.match(/^[cs]h'[ei]/)) {
@@ -155,7 +156,7 @@ function countMetricSyllables(verse) {
     // Rilevazione del pattern degli accenti per adattare la conta ai versi classici
     let accentPattern = detectAccentPattern(words);
 
-    // Adattamento specifico per endecasillabi (es. versi danteschi)
+    // Adattamento specifico per endecasillabi (ad esempio, versi danteschi)
     if (metricalCount === 10 || metricalCount === 12) {
         if (isLikelyEndecasillabo(words, accentPattern)) {
             verseType = "Endecasillabo";
