@@ -299,6 +299,11 @@ document.getElementById('poetry-text').addEventListener('keyup', function (event
     savePoem(poem);
 });
 
+document.getElementById('poetry-text').addEventListener('paste', function () {
+    const poem = document.getElementById('poetry-text').value;
+    analyzePoetry();
+   // savePoem(poem);
+});
 function savePoem(poem) {
     localStorage.setItem('poem', poem);
 }
