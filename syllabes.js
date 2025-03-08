@@ -170,6 +170,8 @@ function countMetricSyllables(verse) {
     // Rilevazione del pattern degli accenti per adattare la conta ai versi classici
     let accentPattern = detectAccentPattern(words);
 
+
+
     // Adattamento specifico per endecasillabi (ad esempio, versi danteschi)
     if (metricalCount === 10 || metricalCount === 12) {
         if (isLikelyEndecasillabo(words, accentPattern)) {
@@ -190,6 +192,11 @@ function countMetricSyllables(verse) {
         metricalCount = 7;
     } else {
         verseType = classifyVerse(metricalCount);
+    }
+
+    if (metricalCount + grammaticalCount> 22){
+        verseType = "Libero";
+        metricalCount = grammaticalCount;
     }
 
     return {
