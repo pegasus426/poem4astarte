@@ -286,8 +286,8 @@ function analyzeVerseType(metricalCount, accentPattern, grammaticalCount) {
     // Use rhythmic principles rather than just syllable count
     
     // Check for endecasillabo based on rhythm
-    if (hasEndecasyllaboPattern(accentPattern, grammaticalCount) || 
-        (metricalCount >= 10 && metricalCount <= 12 && grammaticalCount <= 13)) {
+    if (hasEndecasyllaboPattern(accentPattern, grammaticalCount) && 
+        (metricalCount >= 10 && metricalCount <= 12 && grammaticalCount <= 14)) {
         return {
             type: "Endecasillabo",
             adjustedCount: 11
