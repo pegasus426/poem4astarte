@@ -89,7 +89,7 @@ function analyzePoetry() {
 
     // Assegna una lettera a ogni rima unica (a, b, c, ...)
     uniqueRhymes.forEach((rhyme, index) => {
-        const letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
+        let letter = String.fromCharCode(97 + index); // 97 è il codice ASCII per 'a'
         //se la lettera è superiore a z, assegna un simbolo leggibile
         if (letter > 'z') {
             letter = String.fromCharCode(65 + (letter.charCodeAt(0) - 97)); // 65 è il codice ASCII per 'A'
