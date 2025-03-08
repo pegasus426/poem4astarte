@@ -291,7 +291,15 @@ function resetHighlights() {
 
 loadPoem();
 // Event listeners
-document.getElementById('analyze-btn').addEventListener('click', analyzePoetry);
+document.getElementById('download-btn').addEventListener('click', function(e) {
+    const poem = document.getElementById('poetry-text').value;
+    const blob = new Blob([poem], {type: 'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'poesia_analizzata.txt';
+    a.click();
+});
 
 document.getElementById('poetry-text').addEventListener('keyup', function (event) {
     const poem = document.getElementById('poetry-text').value;
