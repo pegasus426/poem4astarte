@@ -289,9 +289,27 @@ function resetHighlights() {
     });
 }
 
+loadPoem();
 // Event listeners
 document.getElementById('analyze-btn').addEventListener('click', analyzePoetry);
 
+document.getElementById('clear-btn').addEventListener('keyup', function (event) {
+    const poem = document.getElementById('poetry-text').value;
+    analyzePoetry();
+    savePoem(poem);
+});
+
+function savePoem(poem) {
+    localStorage.setItem('poem', poem);
+}
+
+function loadPoem() {
+    const poem = localStorage.getItem('poem');
+    if (poem) {
+        document.getElementById('poetry-text').value = poem;
+        analyzePoetry();
+    }
+}
 document.getElementById('clear-btn').addEventListener('click', function () {
     document.getElementById('poetry-text').value = '';
     document.getElementById('analysis-results').innerHTML = '<p>L\'analisi apparirà qui dopo aver inserito una poesia e cliccato su "Analizza".</p>';
