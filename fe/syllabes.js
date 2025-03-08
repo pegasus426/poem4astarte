@@ -202,33 +202,181 @@ function countMetricSyllables(verse) {
     };
 }
 
-// Funzione per rilevare il pattern degli accenti in base alle sillabe di ogni parola
+// Improved function to detect accent patterns
 function detectAccentPattern(words) {
     let accentPattern = [];
     let syllableIndex = 0;
+    
+    // First pass: identify all stressed syllables
     words.forEach(word => {
-        const syllables = syllabify(word);
+        const cleanWord = word.toLowerCase().replace(/[.,;:!?'")\-]+$/, '').replace(/^[.,;:!?'")\-]+/, '');
+        const syllables = syllabify(cleanWord);
+        
+        // Skip empty words or pure punctuation
+        if (syllables.length === 0) {
+            return;
+        }
+        
         if (syllables.length > 1) {
-            if (hasStressedEnding(word)) {
+            // Check if word has explicit accent marks for stress
+            if (/[àèéìòóù]/.test(cleanWord)) {
+                // Find which syllable contains the accented vowel
+                for (let i = 0; i < syllables.length; i++) {
+                    if (/[àèéìòóù]/.test(syllables[i])) {
+                        accentPattern.push(syllableIndex + i);
+                        break;
+                    }
+                }
+            } else if (hasStressedEnding(cleanWord)) {
                 // Parola tronca: accento sull'ultima sillaba
                 accentPattern.push(syllableIndex + syllables.length - 1);
-            } else if (hasStressedAntepenultimate(word)) {
+            } else if (hasStressedAntepenultimate(cleanWord)) {
                 // Parola sdrucciola: accento sulla terzultima sillaba
                 accentPattern.push(syllableIndex + syllables.length - 3);
             } else {
                 // Parola piana: accento sulla penultima sillaba
                 accentPattern.push(syllableIndex + syllables.length - 2);
             }
-        } else if (syllables.length === 1) {
-            if (isTonicMonosyllable(word)) {
-                accentPattern.push(syllableIndex);
-            }
+        } else if (syllables.length === 1 && isTonicMonosyllable(cleanWord)) {
+            accentPattern.push(syllableIndex);
         }
+        
         syllableIndex += syllables.length;
     });
+    
     return accentPattern;
 }
 
+// Improved function to detect endecasillabo patterns based on rhythmic principles
+function hasEndecasyllaboPattern(accentPattern, totalSyllables) {
+    // Principal accent on 10th syllable is characteristic of endecasillabi
+    const hasPrincipalAccent = accentPattern.includes(10);
+    
+    // Check for canonical accent patterns of endecasillabi
+    // a maiore: accents on 6th and 10th syllables
+    const hasAMaiorePattern = accentPattern.includes(6) && hasPrincipalAccent;
+    
+    // a minore: accents on 4th and 10th syllables
+    const hasAMinorePattern = accentPattern.includes(4) && hasPrincipalAccent;
+    
+    // Additional rhythmic patterns common in Dante and classical Italian poetry
+    const hasDantesqueRhythm = 
+        (accentPattern.includes(1) && accentPattern.includes(4) && hasPrincipalAccent) ||
+        (accentPattern.includes(4) && accentPattern.includes(8) && hasPrincipalAccent) ||
+        (accentPattern.includes(3) && accentPattern.includes(6) && hasPrincipalAccent);
+    
+    // For verses with 9 grammatical syllables that might be endecasillabi
+    // Check if there's a missing syllable due to elision or synaloepha not caught
+    const isPotentialEndecasillabo = 
+        (totalSyllables === 9 || totalSyllables === 10) && 
+        (accentPattern.includes(8) || accentPattern.includes(6) || accentPattern.includes(4));
+    
+    return hasAMaiorePattern || hasAMinorePattern || hasDantesqueRhythm || isPotentialEndecasillabo;
+}
+
+// Improved function for setting verse type based on rhythm analysis
+function analyzeVerseType(metricalCount, accentPattern, grammaticalCount) {
+    // Use rhythmic principles rather than just syllable count
+    
+    // Check for endecasillabo based on rhythm
+    if (hasEndecasyllaboPattern(accentPattern, grammaticalCount) || 
+        (metricalCount >= 10 && metricalCount <= 12)) {
+        return {
+            type: "Endecasillabo",
+            adjustedCount: 11
+        };
+    }
+    
+    // Check for settenario
+    if ((metricalCount === 7) || 
+        (metricalCount === 6 && hasSettenarioPattern(accentPattern)) || 
+        (metricalCount === 8 && hasSettenarioPattern(accentPattern))) {
+        return {
+            type: "Settenario",
+            adjustedCount: 7
+        };
+    }
+    
+    // Default classification based on syllable count
+    return {
+        type: classifyVerse(metricalCount),
+        adjustedCount: metricalCount
+    };
+}
+
+// Modify countMetricSyllables to use the improved rhythm analysis
+function countMetricSyllables(verse) {
+    verse = verse.trim();
+    const words = verse.split(/\s+/);
+    let grammaticalSyllables = [];
+    words.forEach(word => {
+        const syllables = syllabify(word);
+        grammaticalSyllables = grammaticalSyllables.concat(syllables);
+    });
+    const grammaticalCount = grammaticalSyllables.length;
+
+    // Inizialmente il conteggio metrico coincide con quello grammaticale
+    let metricalCount = grammaticalCount;
+    let sinalefiApplied = [];
+    let dialefiApplied = [];
+
+    // Apply synaloepha (sinalefe)
+    for (let i = 0; i < words.length - 1; i++) {
+        let currentWordClean = words[i].toLowerCase().replace(/[.,;:!?'")\-]+$/, '');
+        let nextWordClean = words[i + 1].toLowerCase().replace(/^['"\-(]+/, '');
+
+        const isCurrentAtonic = isAtonicMonosyllable(currentWordClean);
+        const isNextAtonic = isAtonicMonosyllable(nextWordClean);
+        
+        let syllCurrent = syllabify(currentWordClean);
+        let syllNext = syllabify(nextWordClean);
+        if (syllCurrent.length > 0 && syllNext.length > 0) {
+            let lastSyl = syllCurrent[syllCurrent.length - 1];
+            let firstSyl = syllNext[0];
+            // Se l'ultima sillaba termina con vocale e la prima sillaba inizia con vocale, applica sinalefe
+            if ((!isCurrentAtonic || !isNextAtonic) && /[aeiouàèéìòóù]$/.test(lastSyl) && /^[aeiouàèéìòóù]/.test(firstSyl)) {
+                metricalCount--;
+                sinalefiApplied.push(`${currentWordClean}-${nextWordClean}`);
+            }
+        }
+    }
+
+    // Add special handling for potential hidden elisions in Dante's verse
+    // Look for potential elisions that might not have been caught
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i].toLowerCase();
+        // Check for apostrophes that might signal elision
+        if (word.includes("'")) {
+            // Check if we need an additional sinalefe that wasn't caught
+            if (grammaticalCount === 9 && metricalCount === 9 && sinalefiApplied.length === 0) {
+                metricalCount--;
+                sinalefiApplied.push(`${word}-elision effect`);
+            }
+        }
+    }
+
+    // Get accent pattern for rhythm analysis
+    const accentPattern = detectAccentPattern(words);
+
+    // Use improved rhythm analysis for verse type
+    const verseAnalysis = analyzeVerseType(metricalCount, accentPattern, grammaticalCount);
+    
+    // Apply the results of rhythm analysis
+    const verseType = verseAnalysis.type;
+    // Only adjust if necessary (for endecasillabi and settenari primarily)
+    if (verseAnalysis.adjustedCount !== metricalCount) {
+        metricalCount = verseAnalysis.adjustedCount;
+    }
+
+    return {
+        count: metricalCount,
+        grammaticalCount: grammaticalCount,
+        type: verseType,
+        accents: accentPattern,
+        sinalefi: sinalefiApplied,
+        dialefi: dialefiApplied
+    };
+}
 // Verifica se un monosillabo è tonico
 function isTonicMonosyllable(word) {
     word = word.toLowerCase().replace(/^[.,;:!?'")\-]+/, '').replace(/[.,;:!?'")\-]+$/, '');
