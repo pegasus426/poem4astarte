@@ -293,7 +293,7 @@ loadPoem();
 // Event listeners
 document.getElementById('analyze-btn').addEventListener('click', analyzePoetry);
 
-document.getElementById('clear-btn').addEventListener('keyup', function (event) {
+document.getElementById('poetry-text').addEventListener('keyup', function (event) {
     const poem = document.getElementById('poetry-text').value;
     analyzePoetry();
     savePoem(poem);
