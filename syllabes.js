@@ -254,8 +254,7 @@ function detectAccentPattern(words) {
     return accentPattern;
 }
 
-// Improved function to detect endecasillabo patterns based on rhythmic principles
-function hasEndecasyllaboPattern(accentPattern, totalSyllables) {
+function _hasEndecasyllaboPattern(accentPattern, totalSyllables) {
     // Principal accent on 10th syllable is characteristic of endecasillabi
     const hasPrincipalAccent = accentPattern.includes(10);
     
@@ -278,7 +277,17 @@ function hasEndecasyllaboPattern(accentPattern, totalSyllables) {
         (totalSyllables === 9 || totalSyllables === 10) && 
         (accentPattern.includes(8) || accentPattern.includes(6) || accentPattern.includes(4));
     
-    return hasAMaiorePattern || hasAMinorePattern || hasDantesqueRhythm || isPotentialEndecasillabo;
+    return {hasPattern: hasAMaiorePattern|| hasAMaiorePattern || hasDantesqueRhythm, 
+        hasAMaiorePattern, 
+        hasAMinorePattern, 
+        hasDantesqueRhythm, 
+        isPotentialEndecasillabo};
+}
+
+// Improved function to detect endecasillabo patterns based on rhythmic principles
+function hasEndecasyllaboPattern(accentPattern, totalSyllables) {
+    const {hasPattern} = _hasEndecasyllaboPattern(accentPattern, totalSyllories)
+    return hasPattern;
 }
 
 // Improved function for setting verse type based on rhythm analysis
@@ -290,7 +299,7 @@ function analyzeVerseType(metricalCount, accentPattern, grammaticalCount) {
         (metricalCount >= 10 && metricalCount <= 12 && grammaticalCount <= 13)) {
         return {
             type: "Endecasillabo",
-            adjustedCount: 11
+            adjustedCount: metricalCount
         };
     }
     
