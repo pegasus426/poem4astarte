@@ -68,6 +68,8 @@ function syllabify(word) {
             }
         }
 
+ 
+
         // Aggiungi il carattere corrente
         currentSyllable += word[i];
 
@@ -107,6 +109,12 @@ function syllabify(word) {
     return syllables;
 }
 
+function isAtonicMonosyllable(word) {
+    const atonicMonosyllables = ['e', 'o', 'a', 'il', 'lo', 'la', 'i', 'gli', 'le', 'un', 'di', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'ma', 'né', 'se'];
+    return atonicMonosyllables.includes(word.toLowerCase());
+}
+
+
 // Funzione per il conteggio metrico del verso italiano
 let verseType = "";
 function countMetricSyllables(verse) {
@@ -129,13 +137,19 @@ function countMetricSyllables(verse) {
     for (let i = 0; i < words.length - 1; i++) {
         let currentWordClean = words[i].toLowerCase().replace(/[.,;:!?'")\-]+$/, '');
         let nextWordClean = words[i + 1].toLowerCase().replace(/^['"\-(]+/, '');
+
+        const isCurrentAtonic = isAtonicMonosyllable(currentWordClean);
+        const isNextAtonic = isAtonicMonosyllable(nextWordClean);
+        // Applica sinalefe solo se almeno una parola è tonica
+ 
+      
         let syllCurrent = syllabify(currentWordClean);
         let syllNext = syllabify(nextWordClean);
         if (syllCurrent.length > 0 && syllNext.length > 0) {
             let lastSyl = syllCurrent[syllCurrent.length - 1];
             let firstSyl = syllNext[0];
             // Se l'ultima sillaba termina con vocale e la prima sillaba inizia con vocale, applica sinalefe
-            if (/[aeiouàèéìòóù]$/.test(lastSyl) && /^[aeiouàèéìòóù]/.test(firstSyl)) {
+            if ( (!isCurrentAtonic || !isNextAtonic) && /[aeiouàèéìòóù]$/.test(lastSyl) && /^[aeiouàèéìòóù]/.test(firstSyl)) {
                 metricalCount--;
                 sinalefiApplied.push(`${currentWordClean}-${nextWordClean}`);
             }
@@ -231,19 +245,19 @@ function isTonicMonosyllable(word) {
 // Verifica se una parola ha l'accento sull'ultima sillaba (parola tronca)
 function hasStressedEnding(word) {
     word = word.toLowerCase();
-    if (/[àèéìòóù]$/.test(word)) return true;
-    if (/[aeiou]tà$|[aeiou]tù$|[aeiou]chè$|[aeiou]ché$|ì$|[^h]ò$/.test(word)) return true;
-    if (/ità$|età$|[aeiou]zione$/.test(word)) return true;
-    return false;
+    // Rileva accento fonetico (non ortografico) su ultima sillaba
+    const syllables = syllabify(word);
+    if (syllables.length === 0) return false;
+    const lastSyllable = syllables[syllables.length - 1];
+    return /[aeiou]/.test(lastSyllable) && !/[aeiou]{2,}/.test(lastSyllable);
 }
 
-// Verifica se una parola ha l'accento sulla terzultima sillaba (parola sdrucciola)
 function hasStressedAntepenultimate(word) {
-    word = word.toLowerCase();
-    const sdruccioleEndings = ['abile', 'abili', 'evole', 'evoli', 'acolo', 'acoli', 'ondolo', 'ondoli', 'esimo', 'esimi', 'agine', 'agini', 'iscono', 'assero', 'essero', 'issero', 'avano', 'evano', 'ivano', 'ebbero', 'eranno', 'iranno', 'ettero'];
-    return sdruccioleEndings.some(ending => word.endsWith(ending));
+    const syllables = syllabify(word);
+    if (syllables.length < 3) return false;
+    // Accento sulla terzultima se la penultima è breve
+    return syllables[syllables.length - 3].match(/[aeiou]/);
 }
-
 // Verifica se il pattern degli accenti è tipico dell'endecasillabo
 function hasEndecasyllaboPattern(accentPattern) {
     if (!accentPattern.includes(9) && !accentPattern.includes(10)) return false;
