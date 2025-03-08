@@ -128,7 +128,7 @@ function analyzePoetry() {
         });
 
         // Crea dettagli sull'analisi metrica
-        let metricDetails = `${metricAnalysis.count} sillabe metriche, ${metricAnalysis.grammaticalCount} grammaticali`;
+        let metricDetails = `${metricAnalysis.count} sillabe metriche, <strong>${metricAnalysis.grammaticalCount}</strong> grammaticali`;
         if (metricAnalysis.sinalefi && metricAnalysis.sinalefi.length > 0) {
             metricDetails += `<br><small>(Sinalefi: ${metricAnalysis.sinalefi.join(', ')})</small>`;
         }
