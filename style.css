@@ -197,6 +197,9 @@ button:hover {
 .schema-letter.terzina {
     margin-left: 16px;
 }
+.schema-letter.terzina:first-of-type {
+    margin-left: 4px;
+}
 
 
 /* Stile per l'effetto hover delle rime */
