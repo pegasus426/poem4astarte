@@ -24,3 +24,12 @@ poetry run uvicorn src.main:app --reload
 cd fe
 open in browser index.html
 
+## Estrazioni semantiche
+```
+poetry add docx
+poetry install
+poetry shell
+cd be
+python3 src/estrazione-semantica.py ../../Il\ Mare\ Nero\ dell\'Ein-Sof\ \(v3\).docx 
+ll ../../python3 src/estrazione-semantica.py ../../Il\ Mare\ Nero\ dell\'Ein-Sof\ \(v3\).docx 
+
