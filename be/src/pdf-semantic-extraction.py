@@ -141,7 +141,6 @@ def estrazione_saltatoria(testo: str, salto: int = 50) -> Tuple[List[str], List[
             indici_parole.append(indici_originali)
     
     return parole_trovate, indici_parole
-
 def incroci_semantici(testo: str, salto: int) -> Tuple[List[str], Dict[str, List[Tuple[int, int, List[int]]]]]:
     """
     Identifica incroci semantici nel testo (tipo Michael Drosnin).
@@ -155,7 +154,7 @@ def incroci_semantici(testo: str, salto: int) -> Tuple[List[str], Dict[str, List
     # Lista di parole significative da cercare (esempio)
     parole_chiave = parole_italiane
     
-        # Rimuovi spazi e normalizza il testo
+    # Rimuovi spazi e normalizza il testo
     testo_pulito = re.sub(r'\s+', '', testo).lower()
     #rimuovi punteggiatura e caratteri non alfanunerici
     testo_pulito = re.sub(r'[^\w\s]', '', testo_pulito)
@@ -173,12 +172,16 @@ def incroci_semantici(testo: str, salto: int) -> Tuple[List[str], Dict[str, List
                     indici.append(i)
                 
                 if parola in sequenza:
-                    risultati.append(f"{parola} (salto: {salto2})")
-                    
                     # Trova l'indice di inizio della parola nella sequenza
                     indice_inizio_seq = sequenza.find(parola)
                     # Calcola gli indici corrispondenti nel testo originale
                     indici_parola = indici[indice_inizio_seq:indice_inizio_seq+len(parola)]
+                    
+                    # Primo indice della parola nel testo originale (per ordinamento)
+                    primo_indice = indici_parola[0] if indici_parola else 0
+                    
+                    risultato = f"{parola} (salto: {salto2})"
+                    risultati.append((risultato, primo_indice))
                     
                     # Memorizza i dettagli di questa occorrenza
                     if parola not in dettagli_occorrenze:
@@ -187,7 +190,13 @@ def incroci_semantici(testo: str, salto: int) -> Tuple[List[str], Dict[str, List
                     dettagli_occorrenze[parola].append((salto2, posizione_iniziale, indici_parola))
                     break  # Passa alla prossima parola chiave dopo il primo match
     
-    return risultati, dettagli_occorrenze
+    # Ordina i risultati per posizione nel testo
+    risultati.sort(key=lambda x: x[1])
+    # Estrai solo i risultati ordinati senza gli indici
+    risultati_ordinati = [r[0] for r in risultati]
+    
+    return risultati_ordinati, dettagli_occorrenze
+
 def crea_output_formattato(risultati: Dict[str, Dict[str, List[str]]]) -> str:
     """
     Crea un output formattato in testo dei risultati.
@@ -553,7 +562,7 @@ def main():
 
     # Elabora ogni paragrafo
     #for titolo, testo in paragrafi.items():
-        # Estrazione saltatoria con indici
+    # Estrazione saltatoria con indici
     parole_saltatoria, indici_parole = estrazione_saltatoria(testo_completo, salto)
     
     # Ordina le parole saltatorie in base all'ordine di occorrenza nel testo
@@ -571,7 +580,7 @@ def main():
     # Estrai solo le parole ordinate
     parole_saltatoria_ordinate = [parola for parola, _ in parole_con_indici]
         
-    # Incroci semantici con dettagli
+    # Incroci semantici con dettagli - ora restituisce già risultati ordinati
     risultati_semantici, dettagli_semantici = incroci_semantici(testo_completo, salto)
         
     # Raccogli tutti gli indici per evidenziazione HTML
