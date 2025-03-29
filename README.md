@@ -3,7 +3,10 @@
 Opensource poetry writing toolset and copilot
 
 ## Demo (italian only)
+
 https://pegasus426.github.io/poem4astarte/index.html
+
+https://tinyurl.com/syriatiamo
 
 
 ## Suported laguages
