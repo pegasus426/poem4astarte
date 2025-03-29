@@ -4,15 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Poet - Analizzatore di Poesie Italiane</title>
+        <!-- seo tags with title -->
+        <meta name="description" content="Un'app per analizzare e convertire poesie italiane in versione 4Astrada.">
+        <meta name="keywords" content="poesie italiane, poesie analizzare, poesie convertire, poesie 4Astrada">
+        <meta name="author" content="Pegasus426">
+        <!-- ROBOT TAG ALLOW -->
+        <meta name="robots" content="index, follow">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
         @import url('style.css?v=1');
+        .header{
+            background-color: green;
+            color: rgb(92, 33, 33);
+            text-align: center;
+            padding: 5px;
+            position: fixed;
+            bottom: 0;
+            width: auto;
+            z-index: 1000;
+        }
+        .download-link, .header .description{
+            color: white;
+            text-decoration: none;
+            margin: 10px;
+        }
+       .header-content{
+            display: flex;
+       }
     </style>
 </head>
 
 <body>
+     <header class="header">
+        <div class="header-content">
+            <a href="https://pegasus426.github.io/poem4astarte/books/v4%20-%20Il%20Mare%20Nero%20dell'Ein-Sof%20(2).pdf" class="download-link" >    
+                <p class="description">Il Mare Nero dell'Ein-Sof v4 </p> Scarica</a>
+        </div>
+    </header>
     <div class="container">
         <h1>Poet <i class="fas fa-feather-alt"></i></h1>
         <p class="description">Analizza la tua poesia, scopri la struttura sillabica e lo schema delle rime</p>
