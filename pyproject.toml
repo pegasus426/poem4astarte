@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "poem4astarte"
+version = "0.1.0"
+description = ""
+authors = ["Stefano Gargiulo <stefano.gargiulo.426@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+transformers = "^4.52.4"
+torch = "^2.7.0"
+torchvision = "^0.22.0"
+torchaudio = "^2.7.0"
+accelerate = "^1.7.0"
+safetensors = "^0.5.3"
+huggingface-hub = "^0.32.3"
+psutil = "^7.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
